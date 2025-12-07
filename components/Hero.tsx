@@ -1,6 +1,8 @@
-import React from 'react';
-import { Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Edit } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAdmin } from '../context/AdminContext';
+import AdminModal from './ui/AdminModal';
 
 const StudioMicSVG = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 200 400" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -16,51 +18,78 @@ const StudioMicSVG = ({ className }: { className?: string }) => (
         <stop offset="100%" stopColor="#1a1a1a" />
       </linearGradient>
     </defs>
-
-    {/* Shock Mount Suspension Cables (Orange accents) */}
     <path d="M50 140 L50 280" stroke="#FF5722" strokeWidth="2" strokeDasharray="4 2" />
     <path d="M150 140 L150 280" stroke="#FF5722" strokeWidth="2" strokeDasharray="4 2" />
-
-    {/* Outer Yoke Frame */}
     <path d="M40 220 V260 Q40 310 100 310 Q160 310 160 260 V220" stroke="#333" strokeWidth="6" strokeLinecap="round" fill="none" />
-    
-    {/* Side Knobs */}
     <circle cx="40" cy="220" r="6" fill="#555" />
     <circle cx="160" cy="220" r="6" fill="#555" />
-
-    {/* Main Mic Body */}
     <rect x="70" y="80" width="60" height="180" rx="30" fill="url(#bodyGrad)" stroke="#111" strokeWidth="1" />
-    
-    {/* Upper Grille */}
     <rect x="70" y="80" width="60" height="80" rx="30" fill="url(#grilleGrad)" />
-    
-    {/* Grille Texture */}
     <path d="M70 100 H130" stroke="#444" strokeWidth="1" />
     <path d="M70 115 H130" stroke="#444" strokeWidth="1" />
     <path d="M70 130 H130" stroke="#444" strokeWidth="1" />
     <path d="M70 145 H130" stroke="#444" strokeWidth="1" />
-    
     <path d="M90 80 V160" stroke="#444" strokeWidth="1" opacity="0.5" />
     <path d="M110 80 V160" stroke="#444" strokeWidth="1" opacity="0.5" />
-
-    {/* Center Band with Light */}
     <rect x="68" y="160" width="64" height="12" fill="#111" />
     <circle cx="100" cy="166" r="3" fill="#ef4444" className="animate-pulse">
         <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
     </circle>
-
-    {/* Stand Neck */}
     <rect x="90" y="310" width="20" height="90" fill="#222" />
-    
-    {/* Reflection Highlight */}
     <path d="M85 90 Q80 120 85 150" stroke="white" strokeWidth="2" strokeOpacity="0.1" fill="none" />
     <path d="M85 180 Q80 220 85 250" stroke="white" strokeWidth="2" strokeOpacity="0.05" fill="none" />
   </svg>
 );
 
 const Hero: React.FC = () => {
+  const { user, heroData, updateHero } = useAdmin();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState(heroData);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateHero(editForm);
+    setIsEditing(false);
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-20 lg:pt-0">
+      
+      {/* Edit Trigger */}
+      {user && (
+        <button 
+            onClick={() => { setEditForm(heroData); setIsEditing(true); }}
+            className="absolute top-24 right-6 z-50 p-2 bg-neon-orange text-black rounded-full hover:bg-white transition-colors"
+        >
+            <Edit size={20} />
+        </button>
+      )}
+
+      {/* Admin Modal */}
+      <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Edit Hero Section">
+          <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                  <label className="block text-slate-400 text-sm mb-1">Main Title</label>
+                  <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                  <div>
+                      <label className="block text-slate-400 text-sm mb-1">Subtitle First Part</label>
+                      <input type="text" value={editForm.subtitle_p1} onChange={e => setEditForm({...editForm, subtitle_p1: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+                  </div>
+                  <div>
+                      <label className="block text-slate-400 text-sm mb-1">Highlighted Part</label>
+                      <input type="text" value={editForm.subtitle_highlight} onChange={e => setEditForm({...editForm, subtitle_highlight: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+                  </div>
+              </div>
+              <div>
+                  <label className="block text-slate-400 text-sm mb-1">Description</label>
+                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-24" />
+              </div>
+              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Save Changes</button>
+          </form>
+      </AdminModal>
+
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-neon-orange mix-blend-screen filter blur-[100px] opacity-20 animate-blob"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-neon-red mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-2000"></div>
@@ -79,7 +108,7 @@ const Hero: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="font-display text-6xl md:text-8xl lg:text-9xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-neon-orange to-neon-red leading-[0.9]"
             >
-              VOICE IT
+              {heroData.title}
             </motion.h1>
 
             <motion.div 
@@ -89,11 +118,10 @@ const Hero: React.FC = () => {
                 className="mb-10"
             >
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                Feel the <span className="text-neon-orange italic">rhythm.</span>
+                {heroData.subtitle_p1} <span className="text-neon-orange italic">{heroData.subtitle_highlight}</span>
               </h2>
               <p className="text-lg md:text-xl text-slate-400 font-light max-w-lg">
-                The Official Radio & Podcasting Club of VIT Chennai. <br/>
-                Amplifying stories, one frequency at a time.
+                {heroData.description}
               </p>
             </motion.div>
 
@@ -121,7 +149,7 @@ const Hero: React.FC = () => {
         {/* Right Column: Visuals/Animation */}
         <div className="relative flex items-center justify-center h-[400px] lg:h-[600px] order-1 lg:order-2">
             
-            {/* Radio Waves Animation - Centered behind mic */}
+            {/* Radio Waves Animation */}
             {[1, 2, 3].map((i) => (
                 <motion.div
                     key={i}
@@ -142,7 +170,6 @@ const Hero: React.FC = () => {
                 />
             ))}
 
-            {/* Central Studio Mic Illustration */}
             <motion.div 
                 className="relative z-20"
                 animate={{ y: [0, -15, 0] }}
@@ -153,7 +180,7 @@ const Hero: React.FC = () => {
                 </div>
             </motion.div>
 
-            {/* Sound Bars Visualizer Overlay */}
+            {/* Sound Bars */}
             <div className="absolute bottom-10 lg:bottom-10 flex gap-2 items-end z-30 h-16 pointer-events-none mix-blend-overlay">
                  {[...Array(8)].map((_, i) => (
                     <motion.div

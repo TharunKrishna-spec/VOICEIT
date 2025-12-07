@@ -1,7 +1,10 @@
 import React from 'react';
-import { Instagram, Youtube, Mail, Music } from 'lucide-react';
+import { Instagram, Youtube, Mail, Music, LogOut, Settings } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
 
 const Footer: React.FC = () => {
+  const { user, openLoginModal, logout } = useAdmin();
+
   return (
     <footer className="bg-black border-t border-slate-900 pt-16 pb-8">
       <div className="container mx-auto px-6">
@@ -52,7 +55,16 @@ const Footer: React.FC = () => {
             <p>&copy; 2024 VoiceIt VIT Chennai. All rights reserved.</p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
                 <a href="#" className="hover:text-slate-400">Privacy Policy</a>
-                <a href="#" className="hover:text-slate-400">Admin Login</a>
+                
+                {user ? (
+                   <button onClick={logout} className="flex items-center gap-2 text-neon-orange hover:text-white transition-colors font-bold">
+                      <LogOut size={14} /> Logout
+                   </button>
+                ) : (
+                   <button onClick={openLoginModal} className="flex items-center gap-2 hover:text-neon-orange transition-colors">
+                      <Settings size={14} /> Admin Login
+                   </button>
+                )}
             </div>
         </div>
       </div>

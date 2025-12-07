@@ -1,24 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import Section from './ui/Section';
-import { Mic, Video, Edit, PenTool, Share2, Languages, Radio, Activity } from 'lucide-react';
+import { X, ArrowRight, Edit } from 'lucide-react';
 import { Department } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const departments: Department[] = [
-  { id: 'rj-eng', name: 'RJ English', icon: Mic, color: 'text-neon-orange', description: 'The English voice of the club, hosting flagship shows and interviews.' },
-  { id: 'rj-tam', name: 'RJ Tamil', icon: Radio, color: 'text-neon-red', description: 'Bringing local flavor and energy through Tamil commentary and shows.' },
-  { id: 'rj-reg', name: 'RJ Regional', icon: Languages, color: 'text-neon-amber', description: 'Celebrating diversity with Telugu, Malayalam, and Kannada content.' },
-  { id: 'media', name: 'Camera Team', icon: Video, color: 'text-white', description: 'Capturing moments and producing high-quality video coverage.' },
-  { id: 'edit', name: 'Editing', icon: Edit, color: 'text-orange-400', description: 'The wizards behind the seamless audio and video cuts.' },
-  { id: 'content', name: 'Content', icon: PenTool, color: 'text-yellow-200', description: 'Scripting stories, planning shows, and crafting narratives.' },
-  { id: 'social', name: 'Social Media', icon: Share2, color: 'text-red-400', description: 'Managing our digital presence and engaging the audience.' },
-  { id: 'tech', name: 'Tech & Sound', icon: Activity, color: 'text-blue-400', description: 'Managing the live streams, equipment, and audio engineering.' },
-];
+import { useAdmin } from '../context/AdminContext';
+import { getIcon } from '../lib/iconMap';
+import AdminModal from './ui/AdminModal';
 
 const Departments: React.FC = () => {
+  const { departments, user, updateDepartment } = useAdmin();
   const [activeDept, setActiveDept] = useState<Department | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Department>>({});
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -27,11 +23,25 @@ const Departments: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Radius for the layout
-  const circleRadius = isMobile ? 140 : 280;
+  const handleEdit = (dept: Department, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditForm(dept);
+    setIsEditing(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editForm.id) {
+        await updateDepartment(editForm.id, editForm);
+    }
+    setIsEditing(false);
+  };
+
+  // Radius for the orbit
+  const orbitRadius = 260;
 
   return (
-    <Section id="departments" className="bg-slate-950 min-h-screen flex flex-col justify-center overflow-hidden relative">
+    <Section id="departments" className="bg-slate-950 min-h-screen flex flex-col justify-center overflow-hidden relative py-20">
       
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -40,149 +50,186 @@ const Departments: React.FC = () => {
       </div>
 
       <div className="text-center mb-12 relative z-10">
-        <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="text-neon-orange font-bold tracking-wider uppercase text-sm mb-2"
-        >
-            Our Ecosystem
-        </motion.h2>
-        <motion.h3 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-display font-bold text-white"
-        >
-            Departments
-        </motion.h3>
+        <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="text-neon-orange font-bold tracking-wider uppercase text-sm mb-2">Our Ecosystem</motion.h2>
+        <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-display font-bold text-white">Departments</motion.h3>
       </div>
 
-      {/* MOBILE LAYOUT (Slider) */}
+      {/* MOBILE LAYOUT: Horizontal Carousel */}
       {isMobile ? (
-        <div className="flex overflow-x-auto gap-4 p-4 pb-12 snap-x snap-mandatory no-scrollbar z-20">
-            {departments.map((dept) => (
-                <div key={dept.id} className="min-w-[280px] snap-center bg-slate-900/80 border border-slate-800 p-8 rounded-2xl flex flex-col items-center text-center shadow-lg backdrop-blur-sm">
-                    <div className={`p-4 rounded-2xl bg-black mb-4 ${dept.color} border border-slate-800 shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
-                        <dept.icon size={32} />
-                    </div>
-                    <h4 className="text-xl font-bold mb-2 text-white">{dept.name}</h4>
-                    <p className="text-slate-400 text-sm leading-relaxed">{dept.description}</p>
-                </div>
-            ))}
-        </div>
-      ) : (
-        /* DESKTOP LAYOUT (Enhanced Circular Animation) */
-        <div className="relative h-[800px] w-full flex items-center justify-center -mt-20 scale-90 xl:scale-100 transition-transform perspective-1000">
-          
-          {/* Central Hub */}
-          <div className="absolute z-20 w-40 h-40 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-[0_0_60px_rgba(255,87,34,0.2)]">
-             <div className="absolute inset-0 rounded-full border border-neon-orange/20 animate-ping"></div>
-             <div className="absolute inset-2 rounded-full border border-slate-600"></div>
-             
-             <div className="text-center z-10">
-                <div className="w-full flex justify-center mb-1">
-                     <Radio className="w-8 h-8 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                </div>
-                <span className="font-display font-bold text-lg tracking-[0.2em] text-slate-300">CORE</span>
-             </div>
-          </div>
-
-          {/* Decorative Outer Orbit Ring (Counter-Rotating) */}
-          <div className="absolute w-[750px] h-[750px] rounded-full border border-slate-800/30 border-dashed animate-spin-reverse-slow opacity-50 pointer-events-none"></div>
-
-          {/* Main Orbit Track (Visual only) */}
-          <div className="absolute w-[600px] h-[600px] rounded-full border border-slate-800/60 shadow-[0_0_40px_rgba(0,0,0,0.2)] pointer-events-none"></div>
-
-          {/* Rotating Container holding all items */}
-          <div 
-            className={`absolute w-[600px] h-[600px] rounded-full transition-all duration-700 ease-out`}
-            style={{ 
-                animation: `spin 50s linear infinite`,
-                animationPlayState: isHovering || activeDept ? 'paused' : 'running'
-            }}
-          >
-            {departments.map((dept, index) => {
-                const angle = (index / departments.length) * 360;
-                
+        <div className="flex overflow-x-auto gap-4 p-4 pb-12 snap-x snap-mandatory z-20 mt-4 no-scrollbar scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {departments.map((dept) => {
+                const Icon = getIcon(dept.icon);
                 return (
-                    <div
-                        key={dept.id}
-                        className="absolute top-1/2 left-1/2 w-28 h-28 -ml-14 -mt-14"
-                        style={{
-                            transform: `rotate(${angle}deg) translate(${circleRadius}px) rotate(-${angle}deg)`,
-                        }}
-                    >
-                         {/* Counter-rotation container to keep icons upright + Hover stop logic */}
-                         <div 
-                            className="w-full h-full flex items-center justify-center"
-                            style={{ 
-                                animation: `spin-reverse 50s linear infinite`,
-                                animationPlayState: isHovering || activeDept ? 'paused' : 'running'
-                            }}
-                         >
-                             {/* Individual Floating Animation */}
-                             <motion.button
-                                animate={{ y: [0, -8, 0] }}
-                                transition={{ 
-                                    duration: 3, 
-                                    repeat: Infinity, 
-                                    ease: "easeInOut",
-                                    delay: index * 0.5 // Stagger the float effect
-                                }}
-                                onMouseEnter={() => { setIsHovering(true); setActiveDept(dept); }}
-                                onMouseLeave={() => { setIsHovering(false); }}
-                                onClick={() => setActiveDept(dept)}
-                                className={`
-                                    relative w-28 h-28 rounded-2xl 
-                                    bg-slate-900/90 backdrop-blur-md 
-                                    border-2 ${activeDept?.id === dept.id ? 'border-neon-orange bg-slate-800 scale-110 shadow-[0_0_30px_rgba(255,87,34,0.4)]' : 'border-slate-700 hover:border-white hover:bg-slate-800'}
-                                    flex flex-col items-center justify-center 
-                                    transition-all duration-300 z-30 group
-                                `}
-                             >
-                                <dept.icon className={`${dept.color} transition-all duration-300 ${activeDept?.id === dept.id ? 'scale-110' : ''}`} size={36} />
-                                
-                                {/* Mini Label on Hover */}
-                                <div className={`absolute -bottom-8 whitespace-nowrap bg-black/80 px-3 py-1 rounded text-xs font-bold text-white opacity-0 ${activeDept?.id === dept.id ? 'opacity-100' : 'group-hover:opacity-100'} transition-opacity duration-300 pointer-events-none`}>
-                                    {dept.name}
-                                </div>
-                             </motion.button>
-                         </div>
+                    <div key={dept.id} onClick={() => setActiveDept(dept)} className="relative min-w-[280px] w-[280px] snap-center bg-slate-900/80 border border-slate-800 p-8 rounded-2xl flex flex-col items-center text-center shadow-lg backdrop-blur-sm active:scale-95 transition-transform flex-shrink-0 group">
+                        {user && <button onClick={(e) => handleEdit(dept, e)} className="absolute top-2 right-2 p-2 bg-blue-600 rounded-full text-white z-10"><Edit size={14}/></button>}
+                        <div className={`p-4 rounded-full bg-black mb-4 ${dept.color} border border-slate-800 shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300`}>
+                            <Icon size={32} />
+                        </div>
+                        <h4 className="text-xl font-bold mb-2 text-white">{dept.name}</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">{dept.description}</p>
+                        <button className="mt-4 text-neon-orange text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">View Details <ArrowRight size={14} /></button>
                     </div>
                 );
             })}
-          </div>
+            <div className="min-w-[20px] flex-shrink-0"></div>
+        </div>
+      ) : (
+        /* DESKTOP LAYOUT: Flat Circular Orbit */
+        <div className="relative h-[800px] w-full flex items-center justify-center -mt-24">
+             {/* Center Core */}
+             <div className="absolute z-20 w-48 h-48 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-[0_0_80px_rgba(255,87,34,0.3)]">
+                 <div className="absolute inset-0 rounded-full border border-neon-orange/20 animate-ping"></div>
+                 <div className="absolute inset-2 rounded-full border border-slate-600"></div>
+                 
+                 <div className="text-center z-10">
+                    <span className="font-display font-bold text-xl tracking-[0.2em] text-slate-300">CORE</span>
+                 </div>
+             </div>
 
-           {/* Active Department Info Card (Center Overlay or Bottom) */}
-           <AnimatePresence mode="wait">
-            {activeDept && (
-                <motion.div 
-                    key={activeDept.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute z-40 top-[65%] md:top-auto md:bottom-12 bg-slate-900/95 backdrop-blur-xl p-8 rounded-2xl border border-slate-700 max-w-md text-center shadow-[0_10px_50px_rgba(0,0,0,0.5)]"
-                >
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 bg-slate-950 rounded-full border border-slate-800">
-                        <div className={`p-3 rounded-2xl bg-slate-800 ${activeDept.color} shadow-lg`}>
-                            <activeDept.icon size={24} />
+             {/* Decorative Outer Orbit Ring */}
+             <div className="absolute w-[700px] h-[700px] rounded-full border border-slate-800/40 border-dashed animate-spin-reverse-slow opacity-60 pointer-events-none"></div>
+
+             {/* Main Orbit Track (Visual only) */}
+             <div className="absolute w-[520px] h-[520px] rounded-full border border-slate-800/80 shadow-[0_0_40px_rgba(0,0,0,0.4)] pointer-events-none"></div>
+
+             {/* Rotating Container holding all items */}
+             <div 
+                className="absolute w-[520px] h-[520px] rounded-full"
+                style={{ 
+                    animation: `spin 60s linear infinite`,
+                    animationPlayState: isHovering || activeDept ? 'paused' : 'running'
+                }}
+             >
+                {departments.map((dept, index) => {
+                    const angle = (index / departments.length) * 360;
+                    const Icon = getIcon(dept.icon);
+                    
+                    return (
+                        <div
+                            key={dept.id}
+                            className="absolute top-1/2 left-1/2 w-32 h-32 -ml-16 -mt-16" 
+                            style={{
+                                transform: `rotate(${angle}deg) translate(${orbitRadius}px) rotate(-${angle}deg)`,
+                            }}
+                        >
+                             {/* Counter-rotation container to keep icons upright + Hover stop logic */}
+                             <div 
+                                className="w-full h-full flex items-center justify-center"
+                                style={{ 
+                                    animation: `spin-reverse 60s linear infinite`,
+                                    animationPlayState: isHovering || activeDept ? 'paused' : 'running'
+                                }}
+                             >
+                                 <motion.button
+                                    whileHover={{ scale: 1.1, y: -5 }}
+                                    onMouseEnter={() => setIsHovering(true)}
+                                    onMouseLeave={() => setIsHovering(false)}
+                                    onClick={() => setActiveDept(dept)}
+                                    className={`
+                                        relative w-32 h-32 rounded-full 
+                                        bg-slate-900/90 backdrop-blur-md 
+                                        border-2 ${activeDept?.id === dept.id ? 'border-neon-orange bg-slate-800 scale-110 shadow-[0_0_30px_rgba(255,87,34,0.4)]' : 'border-slate-700 hover:border-white hover:bg-slate-800'}
+                                        flex flex-col items-center justify-center 
+                                        transition-all duration-300 z-30 group shadow-2xl
+                                    `}
+                                 >
+                                    <Icon className={`${dept.color} transition-all duration-300 ${activeDept?.id === dept.id ? 'scale-110' : ''}`} size={40} />
+                                    
+                                    {/* Name Label */}
+                                    <div className={`mt-3 text-xs font-bold text-white uppercase tracking-wider opacity-60 group-hover:opacity-100 transition-opacity`}>
+                                        {dept.name.split(' ')[0]}
+                                    </div>
+
+                                    {user && (
+                                        <div 
+                                            onClick={(e) => handleEdit(dept, e)} 
+                                            className="absolute -top-2 -right-2 bg-blue-600 p-1.5 rounded-full hover:bg-white hover:text-blue-600 transition-colors shadow-lg z-50"
+                                        >
+                                            <Edit size={12} fill="currentColor" />
+                                        </div>
+                                    )}
+                                 </motion.button>
+                             </div>
                         </div>
-                    </div>
-                    
-                    <h4 className="text-2xl font-bold text-white mb-3 mt-4">{activeDept.name}</h4>
-                    <p className="text-slate-300 leading-relaxed mb-6">{activeDept.description}</p>
-                    
-                    <div className="flex justify-center gap-4">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                            VoiceIt Department
-                        </span>
-                    </div>
-                </motion.div>
-            )}
-           </AnimatePresence>
+                    );
+                })}
+             </div>
         </div>
       )}
+
+      {/* OVERLAY */}
+      <AnimatePresence>
+        {activeDept && (
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.95 }} 
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-lg"
+                onClick={() => setActiveDept(null)}
+            >
+                <div 
+                    className="relative w-full max-w-4xl bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[80vh]" 
+                    onClick={e => e.stopPropagation()}
+                >
+                    <button onClick={() => setActiveDept(null)} className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full hover:bg-neon-orange hover:text-black transition-colors">
+                        <X size={24} />
+                    </button>
+
+                    {/* Left: Visual */}
+                    <div className="w-full md:w-1/3 bg-gradient-to-br from-slate-900 to-black p-8 flex items-center justify-center relative overflow-hidden">
+                        <div className={`absolute inset-0 opacity-20 bg-${activeDept.color.split('-')[1]}-500 blur-3xl`}></div>
+                        <div className="relative z-10 text-center">
+                            {React.createElement(getIcon(activeDept.icon), { size: 80, className: activeDept.color + " drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" })}
+                            <h2 className="text-3xl font-display font-black text-white mt-6">{activeDept.name}</h2>
+                            <div className="mt-2 inline-block px-3 py-1 rounded-full bg-slate-800 text-xs text-slate-400 uppercase tracking-widest font-bold">Department</div>
+                        </div>
+                    </div>
+
+                    {/* Right: Content */}
+                    <div className="w-full md:w-2/3 p-8 md:p-12 overflow-y-auto custom-scrollbar">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            What we do <span className="h-px flex-1 bg-slate-800 ml-4"></span>
+                        </h3>
+                        <p className="text-slate-300 text-lg leading-relaxed mb-8">
+                            {activeDept.description}
+                        </p>
+                        
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            Roles <span className="h-px flex-1 bg-slate-800 ml-4"></span>
+                        </h3>
+                        <ul className="space-y-3 mb-8">
+                            <li className="flex items-start gap-3 text-slate-400">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-orange flex-shrink-0"></span>
+                                <span>Collaborate on creative projects and shows.</span>
+                            </li>
+                            <li className="flex items-start gap-3 text-slate-400">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-orange flex-shrink-0"></span>
+                                <span>Gain hands-on experience with industry-standard equipment.</span>
+                            </li>
+                            <li className="flex items-start gap-3 text-slate-400">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-orange flex-shrink-0"></span>
+                                <span>Mentorship from senior board members.</span>
+                            </li>
+                        </ul>
+
+                        <a href="#join" onClick={() => setActiveDept(null)} className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-neon-orange transition-colors">
+                            Apply for {activeDept.name} <ArrowRight size={18} />
+                        </a>
+                    </div>
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Edit Department">
+          <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                  <label className="block text-slate-400 text-sm mb-1">Description</label>
+                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-32" />
+              </div>
+              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Save Changes</button>
+          </form>
+      </AdminModal>
     </Section>
   );
 };
