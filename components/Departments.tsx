@@ -54,7 +54,7 @@ const Departments: React.FC = () => {
         <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-display font-bold text-white">Departments</motion.h3>
       </div>
 
-      {/* MOBILE LAYOUT: Horizontal Carousel */}
+      {/* MOBILE LAYOUT: Horizontal Carousel (No Rotation) */}
       {isMobile ? (
         <div className="flex overflow-x-auto gap-4 p-4 pb-12 snap-x snap-mandatory z-20 mt-4 no-scrollbar scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {departments.map((dept) => {
@@ -71,6 +71,7 @@ const Departments: React.FC = () => {
                     </div>
                 );
             })}
+            {/* Spacer for better scrolling feel on right edge */}
             <div className="min-w-[20px] flex-shrink-0"></div>
         </div>
       ) : (
@@ -96,7 +97,7 @@ const Departments: React.FC = () => {
              <div 
                 className="absolute w-[520px] h-[520px] rounded-full"
                 style={{ 
-                    animation: `spin 60s linear infinite`,
+                    animation: `spin 40s linear infinite`,
                     animationPlayState: isHovering || activeDept ? 'paused' : 'running'
                 }}
              >
@@ -116,28 +117,34 @@ const Departments: React.FC = () => {
                              <div 
                                 className="w-full h-full flex items-center justify-center"
                                 style={{ 
-                                    animation: `spin-reverse 60s linear infinite`,
+                                    animation: `spin-reverse 40s linear infinite`,
                                     animationPlayState: isHovering || activeDept ? 'paused' : 'running'
                                 }}
                              >
                                  <motion.button
-                                    whileHover={{ scale: 1.1, y: -5 }}
+                                    whileHover={{ scale: 1.15 }}
                                     onMouseEnter={() => setIsHovering(true)}
                                     onMouseLeave={() => setIsHovering(false)}
                                     onClick={() => setActiveDept(dept)}
                                     className={`
                                         relative w-32 h-32 rounded-full 
                                         bg-slate-900/90 backdrop-blur-md 
-                                        border-2 ${activeDept?.id === dept.id ? 'border-neon-orange bg-slate-800 scale-110 shadow-[0_0_30px_rgba(255,87,34,0.4)]' : 'border-slate-700 hover:border-white hover:bg-slate-800'}
+                                        border-2 ${activeDept?.id === dept.id ? 'border-neon-orange bg-slate-800 scale-110 shadow-[0_0_40px_rgba(255,87,34,0.6)]' : 'border-slate-700 hover:border-neon-orange hover:shadow-[0_0_30px_rgba(255,87,34,0.5)]'}
                                         flex flex-col items-center justify-center 
                                         transition-all duration-300 z-30 group shadow-2xl
                                     `}
                                  >
-                                    <Icon className={`${dept.color} transition-all duration-300 ${activeDept?.id === dept.id ? 'scale-110' : ''}`} size={40} />
+                                    <Icon className={`${dept.color} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]`} size={40} />
                                     
                                     {/* Name Label */}
                                     <div className={`mt-3 text-xs font-bold text-white uppercase tracking-wider opacity-60 group-hover:opacity-100 transition-opacity`}>
                                         {dept.name.split(' ')[0]}
+                                    </div>
+
+                                    {/* Hover Description Tooltip */}
+                                    <div className="absolute top-full mt-4 w-48 p-4 bg-slate-950/95 border border-slate-700 rounded-xl text-center shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50">
+                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-950 border-t border-l border-slate-700 rotate-45"></div>
+                                        <p className="text-xs text-slate-300 leading-snug">{dept.description}</p>
                                     </div>
 
                                     {user && (

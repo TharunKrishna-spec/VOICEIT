@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -8,6 +7,7 @@ import Podcasts from './components/Podcasts';
 import Departments from './components/Departments';
 import Leads from './components/Leads';
 import Team from './components/Team';
+import Testimonials from './components/Testimonials';
 import JoinCTA from './components/JoinCTA';
 import Footer from './components/Footer';
 import { AdminProvider } from './context/AdminContext';
@@ -28,6 +28,7 @@ const App: React.FC = () => {
           <Departments />
           <Team />
           <Leads />
+          <Testimonials />
           <JoinCTA />
         </main>
         <Footer />

@@ -1,4 +1,4 @@
-import { Department, EventItem, Lead, BoardMember, HeroData, Podcast } from "../types";
+import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks } from "../types";
 
 export const initialHero: HeroData = {
   title: "VOICE IT",
@@ -34,12 +34,46 @@ export const initialBoard: BoardMember[] = [
 ];
 
 export const initialLeads: Lead[] = [
-  { id: '1', name: 'Rohan Sharma', designation: 'Head of English RJ', department: 'RJ English', image: 'https://picsum.photos/300/400?random=20' },
-  { id: '2', name: 'Kavya Reddy', designation: 'Head of Events', department: 'Events', image: 'https://picsum.photos/300/400?random=21' },
-  { id: '3', name: 'Siddharth M', designation: 'Technical Lead', department: 'Tech', image: 'https://picsum.photos/300/400?random=22' },
-  { id: '4', name: 'Nithya V', designation: 'Content Chief', department: 'Content', image: 'https://picsum.photos/300/400?random=23' },
-  { id: '5', name: 'Aditya Raj', designation: 'Video Production Head', department: 'Media', image: 'https://picsum.photos/300/400?random=24' },
-  { id: '6', name: 'Meera Nair', designation: 'Social Media Manager', department: 'Social', image: 'https://picsum.photos/300/400?random=25' },
+  { 
+      id: '1', 
+      name: 'Rohan Sharma', 
+      designation: 'Head of English RJ', 
+      department: 'RJ English', 
+      image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=600&fit=crop&q=80',
+      quote: "Leading the voice of the campus involves curating shows that resonate with every student's heartbeat."
+  },
+  { 
+      id: '2', 
+      name: 'Kavya Reddy', 
+      designation: 'Head of Events', 
+      department: 'Events', 
+      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=600&fit=crop&q=80',
+      quote: "Every event is a story waiting to unfold. We ensure the stage is set for magic to happen."
+  },
+  { 
+      id: '3', 
+      name: 'Siddharth M', 
+      designation: 'Technical Lead', 
+      department: 'Tech', 
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop&q=80',
+      quote: "Behind every seamless broadcast is a complex web of cables and code that we manage with pride."
+  },
+  { 
+      id: '4', 
+      name: 'Nithya V', 
+      designation: 'Content Chief', 
+      department: 'Content', 
+      image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=600&fit=crop&q=80',
+      quote: "Words have power. Our team crafts narratives that inspire, inform, and entertain."
+  },
+  { 
+      id: '5', 
+      name: 'Meera Nair', 
+      designation: 'Social Media Manager', 
+      department: 'Social', 
+      image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=600&fit=crop&q=80',
+      quote: "Connecting the digital world with our on-ground energy, one post at a time."
+  },
 ];
 
 export const initialPodcasts: Podcast[] = [
@@ -48,3 +82,68 @@ export const initialPodcasts: Podcast[] = [
   { id: '3', title: 'Tech Talk Weekly', host: 'Tech Team', duration: '45m', image: 'https://picsum.photos/400/400?random=52' },
   { id: '4', title: 'Music Theory & Chill', host: 'RJ Karthik', duration: '32m', image: 'https://picsum.photos/400/400?random=53' },
 ];
+
+export const initialPastTenures: PastTenure[] = [
+  {
+    id: '1',
+    year: '2023-24',
+    members: [
+      { id: 'p1', name: 'Rahul V', role: 'President', image: 'https://picsum.photos/300/300?random=60' },
+      { id: 'p2', name: 'Sneha M', role: 'Vice President', image: 'https://picsum.photos/300/300?random=61' },
+      { id: 'p3', name: 'Amit K', role: 'General Secretary', image: 'https://picsum.photos/300/300?random=62' },
+    ]
+  },
+  {
+    id: '2',
+    year: '2022-23',
+    members: [
+      { id: 'p4', name: 'Karthik S', role: 'President', image: 'https://picsum.photos/300/300?random=63' },
+      { id: 'p5', name: 'Pooja R', role: 'Vice President', image: 'https://picsum.photos/300/300?random=64' },
+    ]
+  }
+];
+
+export const initialPastLeadTenures: PastLeadTenure[] = [];
+
+export const initialTestimonials: Testimonial[] = [
+  {
+    id: '1',
+    quote: "VoiceIt taught me that my voice matters. From a shy fresher to hosting the university's biggest fest, the journey was surreal.",
+    name: "Ananya Gupta",
+    designation: "Alumni, Batch of 2023",
+    src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=3560&auto=format&fit=crop",
+  },
+  {
+    id: '2',
+    quote: "The technical team here is on another level. I learned more about audio engineering in 6 months here than I did in 2 years online.",
+    name: "David Chen",
+    designation: "Tech Lead, 2022",
+    src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=3560&auto=format&fit=crop",
+  },
+  {
+    id: '3',
+    quote: "Joining VoiceIt was the best decision of my college life. It's not just a club, it's a family that pushes you to be your best creative self.",
+    name: "James Watson",
+    designation: "RJ English",
+    src: "https://images.unsplash.com/photo-1623582854588-d60de57fa33f?q=80&w=3560&auto=format&fit=crop",
+  },
+  {
+    id: '4',
+    quote: "The exposure you get here is unmatched. Interviewing celebrities and managing live crowds gave me skills I use in my corporate job today.",
+    name: "Emily Davis",
+    designation: "Former President",
+    src: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=3560&auto=format&fit=crop",
+  },
+];
+
+export const initialRecruitment: RecruitmentData = {
+  isOpen: false,
+  link: ""
+};
+
+export const initialSocialLinks: SocialLinks = {
+  instagram: 'https://instagram.com',
+  youtube: 'https://youtube.com',
+  spotify: 'https://spotify.com',
+  email: 'mailto:contact@voiceit.com'
+};

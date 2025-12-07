@@ -5,7 +5,7 @@ import { LucideIcon } from "lucide-react";
 export interface Department {
   id: string;
   name: string;
-  icon: string; // Changed from LucideIcon to string name
+  icon: string; 
   description: string;
   color: string;
 }
@@ -14,7 +14,7 @@ export interface EventItem {
   id: string;
   title: string;
   year: string;
-  icon: string; // Changed from LucideIcon to string name
+  icon: string; 
   description: string;
 }
 
@@ -28,9 +28,10 @@ export interface BoardMember {
 export interface Lead {
   id: string;
   name: string;
-  designation: string; // Normalized from 'role' for tooltip comp
+  designation: string; 
   department: string;
   image: string;
+  quote?: string; // Added for the new Slider design
 }
 
 export interface Podcast {
@@ -42,9 +43,41 @@ export interface Podcast {
   link?: string;
 }
 
+export interface PastTenure {
+  id: string;
+  year: string;
+  members: BoardMember[];
+}
+
+export interface PastLeadTenure {
+  id: string;
+  year: string;
+  leads: Lead[];
+}
+
+export interface Testimonial {
+  id: string;
+  quote: string;
+  name: string;
+  designation: string;
+  src: string;
+}
+
 export interface HeroData {
   title: string;
   subtitle_p1: string;
   subtitle_highlight: string;
   description: string;
+}
+
+export interface RecruitmentData {
+  isOpen: boolean;
+  link: string;
+}
+
+export interface SocialLinks {
+  instagram: string;
+  youtube: string;
+  spotify: string;
+  email: string;
 }

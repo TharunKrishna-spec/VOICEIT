@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HeroData, Department, EventItem, BoardMember, Lead, Podcast } from '../types';
-import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts } from '../lib/initialData';
+import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks } from '../types';
+import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks } from '../lib/initialData';
 
 interface User {
   uid: string;
@@ -16,6 +16,11 @@ interface AdminContextType {
   boardMembers: BoardMember[];
   leads: Lead[];
   podcasts: Podcast[];
+  pastTenures: PastTenure[];
+  pastLeadTenures: PastLeadTenure[];
+  testimonials: Testimonial[];
+  recruitment: RecruitmentData;
+  socialLinks: SocialLinks;
   isLoginOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
@@ -32,6 +37,14 @@ interface AdminContextType {
   deleteLead: (id: string) => Promise<void>;
   addPodcast: (podcast: Omit<Podcast, 'id'>) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
+  archiveBoard: (year: string) => Promise<void>;
+  deletePastTenure: (id: string) => Promise<void>;
+  archiveLeads: (year: string) => Promise<void>;
+  deletePastLeadTenure: (id: string) => Promise<void>;
+  addTestimonial: (testimonial: Omit<Testimonial, 'id'>) => Promise<void>;
+  deleteTestimonial: (id: string) => Promise<void>;
+  updateRecruitment: (data: RecruitmentData) => Promise<void>;
+  updateSocialLinks: (data: SocialLinks) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -54,6 +67,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>(initialBoard);
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [podcasts, setPodcasts] = useState<Podcast[]>(initialPodcasts);
+  const [pastTenures, setPastTenures] = useState<PastTenure[]>(initialPastTenures);
+  const [pastLeadTenures, setPastLeadTenures] = useState<PastLeadTenure[]>(initialPastLeadTenures);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const [recruitment, setRecruitment] = useState<RecruitmentData>(initialRecruitment);
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>(initialSocialLinks);
 
   // Load from LocalStorage on mount
   useEffect(() => {
@@ -75,6 +93,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       const storedPodcasts = localStorage.getItem('voiceit_podcasts');
       if (storedPodcasts) setPodcasts(JSON.parse(storedPodcasts));
+
+      const storedPastTenures = localStorage.getItem('voiceit_past_tenures');
+      if (storedPastTenures) setPastTenures(JSON.parse(storedPastTenures));
+
+      const storedPastLeadTenures = localStorage.getItem('voiceit_past_lead_tenures');
+      if (storedPastLeadTenures) setPastLeadTenures(JSON.parse(storedPastLeadTenures));
+      
+      const storedTestimonials = localStorage.getItem('voiceit_testimonials');
+      if (storedTestimonials) setTestimonials(JSON.parse(storedTestimonials));
+
+      const storedRecruitment = localStorage.getItem('voiceit_recruitment');
+      if (storedRecruitment) setRecruitment(JSON.parse(storedRecruitment));
+      
+      const storedSocial = localStorage.getItem('voiceit_social');
+      if (storedSocial) setSocialLinks(JSON.parse(storedSocial));
 
       const storedUser = localStorage.getItem('voiceit_user');
       if (storedUser) setUser(JSON.parse(storedUser));
@@ -169,16 +202,69 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     save('voiceit_podcasts', newData, setPodcasts);
   };
 
+  const archiveBoard = async (year: string) => {
+    const newTenure: PastTenure = {
+        id: Date.now().toString(),
+        year: year,
+        members: [...boardMembers]
+    };
+    const newData = [newTenure, ...pastTenures];
+    save('voiceit_past_tenures', newData, setPastTenures);
+  };
+
+  const deletePastTenure = async (id: string) => {
+    const newData = pastTenures.filter(t => t.id !== id);
+    save('voiceit_past_tenures', newData, setPastTenures);
+  };
+
+  const archiveLeads = async (year: string) => {
+    const newTenure: PastLeadTenure = {
+        id: Date.now().toString(),
+        year: year,
+        leads: [...leads]
+    };
+    const newData = [newTenure, ...pastLeadTenures];
+    save('voiceit_past_lead_tenures', newData, setPastLeadTenures);
+  };
+
+  const deletePastLeadTenure = async (id: string) => {
+    const newData = pastLeadTenures.filter(t => t.id !== id);
+    save('voiceit_past_lead_tenures', newData, setPastLeadTenures);
+  };
+
+  const addTestimonial = async (testimonial: Omit<Testimonial, 'id'>) => {
+    const newItem = { ...testimonial, id: Date.now().toString() };
+    const newData = [...testimonials, newItem];
+    save('voiceit_testimonials', newData, setTestimonials);
+  };
+
+  const deleteTestimonial = async (id: string) => {
+    const newData = testimonials.filter(t => t.id !== id);
+    save('voiceit_testimonials', newData, setTestimonials);
+  };
+
+  const updateRecruitment = async (data: RecruitmentData) => {
+    save('voiceit_recruitment', data, setRecruitment);
+  };
+
+  const updateSocialLinks = async (data: SocialLinks) => {
+    save('voiceit_social', data, setSocialLinks);
+  };
+
   return (
     <AdminContext.Provider value={{
-      user, loading, heroData, departments, events, boardMembers, leads, podcasts,
+      user, loading, heroData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks,
       isLoginOpen, openLoginModal: () => setIsLoginOpen(true), closeLoginModal: () => setIsLoginOpen(false),
       login, logout,
       updateHero, updateDepartment,
       addEvent, updateEvent, deleteEvent,
       addBoardMember, deleteBoardMember,
       addLead, deleteLead,
-      addPodcast, deletePodcast
+      addPodcast, deletePodcast,
+      archiveBoard, deletePastTenure,
+      archiveLeads, deletePastLeadTenure,
+      addTestimonial, deleteTestimonial,
+      updateRecruitment, updateSocialLinks
     }}>
       {children}
     </AdminContext.Provider>

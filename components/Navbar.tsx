@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +17,7 @@ const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'About', href: '#about' },
     { name: 'Events', href: '#events' },
+    { name: 'Podcasts', href: '#podcasts' },
     { name: 'Departments', href: '#departments' },
     { name: 'Team', href: '#team' },
   ];
@@ -33,12 +33,12 @@ const Navbar: React.FC = () => {
       }`}
     >
       <div className="container mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-neon-orange to-neon-red flex items-center justify-center">
+        <a href="#" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-neon-orange to-neon-red flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_rgba(255,87,34,0.3)]">
                  <span className="font-black text-white text-xs">V</span>
             </div>
-            <span className="font-display font-bold text-xl tracking-wider text-white">VOICEIT</span>
-        </div>
+            <span className="font-display font-bold text-xl tracking-wider text-white group-hover:text-neon-orange transition-colors">VOICEIT</span>
+        </a>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
@@ -49,10 +49,10 @@ const Navbar: React.FC = () => {
                     className="text-sm font-medium text-slate-300 hover:text-white transition-colors relative group"
                 >
                     {link.name}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-neon-orange transition-all group-hover:w-full"></span>
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-neon-orange transition-all group-hover:w-full box-shadow-[0_0_8px_rgba(255,87,34,0.8)]"></span>
                 </a>
             ))}
-            <a href="#join" className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold hover:bg-neon-orange transition-colors shadow-lg">
+            <a href="#join" className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold hover:bg-neon-orange hover:shadow-[0_0_20px_rgba(255,87,34,0.4)] transition-all shadow-lg">
                 Join Us
             </a>
         </div>
