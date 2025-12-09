@@ -1,3 +1,4 @@
+
 import { LucideIcon } from "lucide-react";
 
 // For Database storage, icons are strings (e.g., "Mic")
@@ -80,6 +81,5 @@ export interface RecruitmentData {
 export interface SocialLinks {
   instagram: string;
   youtube: string;
-  spotify: string;
-  email: string;
+  linkedin: string;
 }
