@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import Section from './ui/Section';
-import { ArrowRight, Plus, Trash2, Edit, Search, ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Edit, Search, ArrowLeft, Calendar, X, MapPin } from 'lucide-react';
 import { EventItem } from '../types';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useAdmin } from '../context/AdminContext';
@@ -13,9 +13,10 @@ interface TimelineCardProps {
   isAdmin: boolean;
   onEdit: (e: EventItem) => void;
   onDelete: (id: string) => void;
+  onRecap: (e: EventItem) => void;
 }
 
-const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEdit, onDelete }) => {
+const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEdit, onDelete, onRecap }) => {
   const isEven = index % 2 === 0;
   const Icon = getIcon(event.icon);
 
@@ -74,10 +75,13 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEd
 
                     <p className="text-slate-400 text-sm leading-relaxed mb-4">{event.description}</p>
 
-                    <div className={`flex items-center gap-2 text-xs font-bold text-slate-600 group-hover:text-neon-orange uppercase tracking-wider transition-colors ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                    <button 
+                        onClick={() => onRecap(event)}
+                        className={`flex items-center gap-2 text-xs font-bold text-slate-600 group-hover:text-neon-orange uppercase tracking-wider transition-colors hover:underline ${isEven ? 'md:flex-row-reverse' : ''}`}
+                    >
                         <span>Read Recap</span>
                         <ArrowRight size={12} className={`transition-transform duration-300 ${isEven ? 'group-hover:-translate-x-1 rotate-180' : 'group-hover:translate-x-1'}`} />
-                    </div>
+                    </button>
                 </div>
 
             </motion.div>
@@ -166,11 +170,84 @@ const ArchiveView = ({ events, onBack }: { events: EventItem[], onBack: () => vo
     );
 }
 
+const RecapModal = ({ event, onClose }: { event: EventItem | null, onClose: () => void }) => {
+    if (!event) return null;
+    const Icon = getIcon(event.icon);
+
+    return (
+        <AnimatePresence>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                    className="relative w-full max-w-2xl bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                >
+                    <button onClick={onClose} className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-neon-orange hover:text-black transition-colors backdrop-blur-sm">
+                        <X size={20} />
+                    </button>
+
+                    {/* Header Image */}
+                    <div className="relative h-48 md:h-64 bg-slate-900 overflow-hidden">
+                        {event.image ? (
+                            <img src={event.image} alt={event.title} className="w-full h-full object-cover opacity-80" />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-slate-900 to-black flex items-center justify-center">
+                                <Icon size={64} className="text-slate-800" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent"></div>
+                        
+                        <div className="absolute bottom-6 left-6 md:left-8">
+                             <div className="inline-block px-3 py-1 mb-3 rounded-full text-xs font-bold bg-neon-orange text-black">
+                                {event.year}
+                             </div>
+                             <h2 className="text-3xl md:text-4xl font-display font-black text-white">{event.title}</h2>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
+                        <p className="text-lg text-slate-300 leading-relaxed mb-6 font-light">
+                            {event.longDescription || event.description}
+                        </p>
+                        
+                        {!event.longDescription && (
+                             <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 text-slate-500 text-sm italic text-center">
+                                Detailed recap coming soon...
+                             </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-4 mt-8 pt-8 border-t border-slate-800/50">
+                             <div className="flex items-center gap-2 text-slate-400 text-sm">
+                                 <Calendar size={16} className="text-neon-orange" />
+                                 <span>Event Date: {event.year}</span>
+                             </div>
+                             <div className="flex items-center gap-2 text-slate-400 text-sm">
+                                 <MapPin size={16} className="text-neon-orange" />
+                                 <span>VIT Chennai Campus</span>
+                             </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        </AnimatePresence>
+    );
+};
+
 const EventsTimeline: React.FC = () => {
     const { events, user, addEvent, deleteEvent, updateEvent } = useAdmin();
     const [isEditing, setIsEditing] = useState(false);
     const [currentEvent, setCurrentEvent] = useState<Partial<EventItem>>({});
     const [showArchive, setShowArchive] = useState(false);
+    const [selectedRecapEvent, setSelectedRecapEvent] = useState<EventItem | null>(null);
     
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
@@ -186,7 +263,7 @@ const EventsTimeline: React.FC = () => {
     };
 
     const handleAddNew = () => {
-        setCurrentEvent({ title: '', year: '2024', description: '', icon: 'Mic' });
+        setCurrentEvent({ title: '', year: '2024', description: '', icon: 'Mic', image: '', longDescription: '' });
         setIsEditing(true);
     };
 
@@ -255,6 +332,7 @@ const EventsTimeline: React.FC = () => {
                                 isAdmin={!!user}
                                 onEdit={handleEdit}
                                 onDelete={deleteEvent}
+                                onRecap={setSelectedRecapEvent}
                             />
                         ))}
                     </div>
@@ -284,6 +362,10 @@ const EventsTimeline: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {selectedRecapEvent && (
+          <RecapModal event={selectedRecapEvent} onClose={() => setSelectedRecapEvent(null)} />
+      )}
+
       {/* ADMIN MODAL */}
       <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title={currentEvent.id ? 'Edit Event' : 'Add New Event'}>
           <form onSubmit={handleSave} className="space-y-4">
@@ -306,8 +388,16 @@ const EventsTimeline: React.FC = () => {
                 </div>
               </div>
               <div>
-                  <label className="block text-slate-400 text-sm mb-1">Description</label>
-                  <textarea required value={currentEvent.description} onChange={e => setCurrentEvent({...currentEvent, description: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-24" />
+                  <label className="block text-slate-400 text-sm mb-1">Short Description</label>
+                  <textarea required value={currentEvent.description} onChange={e => setCurrentEvent({...currentEvent, description: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-20" />
+              </div>
+               <div>
+                  <label className="block text-slate-400 text-sm mb-1">Full Recap (Long Description)</label>
+                  <textarea value={currentEvent.longDescription || ''} onChange={e => setCurrentEvent({...currentEvent, longDescription: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-32" />
+              </div>
+               <div>
+                  <label className="block text-slate-400 text-sm mb-1">Image URL (Optional)</label>
+                  <input type="text" value={currentEvent.image || ''} onChange={e => setCurrentEvent({...currentEvent, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
               </div>
               <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Save Event</button>
           </form>

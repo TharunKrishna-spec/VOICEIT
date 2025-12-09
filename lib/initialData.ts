@@ -19,11 +19,51 @@ export const initialDepartments: Department[] = [
 ];
 
 export const initialEvents: EventItem[] = [
-  { id: '1', title: 'Auditions 2024', year: '2024', icon: 'Mic', description: 'The hunt for the next voice of VITC. Over 500 participants showcased their talent in a grueling 3-round process.' },
-  { id: '2', title: 'Vibrance Radio', year: '2023', icon: 'Music4', description: 'Live radio booth during the cultural fest, streaming non-stop for 3 days with celebrity interviews and live jams.' },
-  { id: '3', title: 'Spooktober Podcast', year: '2023', icon: 'Sparkles', description: 'A horror special series released on Spotify featuring student stories and soundscapes.' },
-  { id: '4', title: 'TechnoVIT Coverage', year: '2023', icon: 'Calendar', description: 'Official media partners for the tech fest, covering 50+ events and providing live updates.' },
-  { id: '5', title: 'Open Mic Night', year: '2022', icon: 'Radio', description: 'Showcasing raw talent from the campus in an intimate acoustic setting at the Amphitheatre.' },
+  { 
+    id: '1', 
+    title: 'Auditions 2024', 
+    year: '2024', 
+    icon: 'Mic', 
+    description: 'The hunt for the next voice of VITC. Over 500 participants showcased their talent.',
+    image: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=2070&auto=format&fit=crop',
+    longDescription: 'The 2024 Auditions were a massive success, marking one of our largest turnouts in history. Students from every school in VIT Chennai came forward to test their vocal mettle. The process involved three rigorous rounds: a 60-second elevator pitch, an improv round to test wit and spontaneity, and a final studio simulation where candidates managed a live console while speaking. We discovered some truly unique voices that will define the sound of the campus for the next year.'
+  },
+  { 
+    id: '2', 
+    title: 'Vibrance Radio', 
+    year: '2023', 
+    icon: 'Music4', 
+    description: 'Live radio booth during the cultural fest, streaming non-stop for 3 days.',
+    image: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac6d5?q=80&w=2066&auto=format&fit=crop',
+    longDescription: 'Vibrance is the heartbeat of VIT Chennai, and VoiceIt was right at the center of it. We set up a glass-walled live radio booth in the middle of the food street. For 72 hours, our RJs kept the energy high with track requests, live dedications, and impromptu interviews with guest artists and celebrities. The "Vibrance After Hours" segment became an instant hit, featuring acoustic jams and ghost stories that gathered a massive crowd around the booth.'
+  },
+  { 
+    id: '3', 
+    title: 'Spooktober Podcast', 
+    year: '2023', 
+    icon: 'Sparkles', 
+    description: 'A horror special series released on Spotify featuring student stories.',
+    image: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2037&auto=format&fit=crop',
+    longDescription: 'Our Spooktober special pushed the boundaries of audio storytelling. We crowdsourced real paranormal experiences from students living in the hostels and turned them into a highly produced audio drama. The sound design team used binaural audio techniques to create an immersive 3D soundscape. Listening with headphones was mandatory—and terrifying. The series topped the campus charts for 3 weeks straight.'
+  },
+  { 
+    id: '4', 
+    title: 'TechnoVIT Coverage', 
+    year: '2023', 
+    icon: 'Calendar', 
+    description: 'Official media partners for the tech fest, covering 50+ events.',
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop',
+    longDescription: 'As the official media partners for TechnoVIT, our camera and reporting teams were everywhere. We produced daily recap reels that were edited and uploaded within 2 hours of the events concluding. Our "Tech Talk" corner featured quick-fire interviews with hackathon winners and guest speakers from the industry, bridging the gap between technical jargon and entertainment.'
+  },
+  { 
+    id: '5', 
+    title: 'Open Mic Night', 
+    year: '2022', 
+    icon: 'Radio', 
+    description: 'Showcasing raw talent from the campus in an intimate acoustic setting.',
+    image: 'https://images.unsplash.com/photo-1525268323446-0505b6fe7778?q=80&w=2072&auto=format&fit=crop',
+    longDescription: 'Held at the Amphitheatre under the stars, Open Mic Night 2022 was a celebration of vulnerability and art. We provided the stage, the mic, and the vibe; the students provided the magic. From poetry and stand-up comedy to beatboxing and classical singing, the variety was astounding. It was a reminder that VoiceIt isn\'t just about us talking—it\'s about giving everyone a platform to be heard.'
+  },
 ];
 
 export const initialBoard: BoardMember[] = [

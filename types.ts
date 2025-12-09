@@ -16,6 +16,8 @@ export interface EventItem {
   year: string;
   icon: string; 
   description: string;
+  image?: string;
+  longDescription?: string;
 }
 
 export interface BoardMember {

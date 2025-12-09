@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAdmin } from '../context/AdminContext';
 import { getIcon } from '../lib/iconMap';
 import AdminModal from './ui/AdminModal';
+import { RadioJockey3D } from './ui/RadioJockey3D';
 
 // Map tailwind text classes to Hex values for the 3D glow effects
 const HexColorMap: Record<string, string> = {
@@ -169,8 +170,8 @@ const Departments: React.FC = () => {
                  <div className="absolute inset-0 rounded-full border border-neon-orange/20 animate-ping"></div>
                  <div className="absolute inset-2 rounded-full border border-slate-600 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-black"></div>
                  
-                 <div className="text-center z-10">
-                    <span className="font-display font-bold text-xl tracking-[0.2em] text-slate-300">CORE</span>
+                 <div className="z-10 relative w-full h-full flex items-center justify-center pb-2 pl-1">
+                    <RadioJockey3D className="w-32 h-44 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
                  </div>
              </div>
 
