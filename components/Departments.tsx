@@ -20,12 +20,27 @@ const HexColorMap: Record<string, string> = {
   'text-blue-400': '#60A5FA',
 };
 
-const DeptIcon3D = ({ iconName, colorClass, isHovered }: { iconName: string, colorClass: string, isHovered: boolean }) => {
+const DeptIcon3D = ({ 
+  iconName, 
+  colorClass, 
+  isHovered, 
+  layoutId,
+  className = "w-28 h-28"
+}: { 
+  iconName: string, 
+  colorClass: string, 
+  isHovered: boolean, 
+  layoutId?: string,
+  className?: string
+}) => {
     const Icon = getIcon(iconName);
     const colorHex = HexColorMap[colorClass] || '#ffffff';
     
     return (
-        <div className="relative w-28 h-28 [perspective:1000px]">
+        <motion.div 
+            layoutId={layoutId}
+            className={`relative ${className} [perspective:1000px]`}
+        >
             <motion.div 
                 className="relative w-full h-full flex items-center justify-center [transform-style:preserve-3d]"
                 animate={{ 
@@ -71,7 +86,7 @@ const DeptIcon3D = ({ iconName, colorClass, isHovered }: { iconName: string, col
                 {/* Layer 5: Top Specular Highlight */}
                 <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-white/40 to-transparent rounded-full blur-md [transform:translateZ(35px)] opacity-60"></div>
             </motion.div>
-        </div>
+        </motion.div>
     );
 };
 
@@ -130,7 +145,12 @@ const Departments: React.FC = () => {
                         {user && <button onClick={(e) => handleEdit(dept, e)} className="absolute top-2 right-2 p-2 bg-blue-600 rounded-full text-white z-10"><Edit size={14}/></button>}
                         
                         <div className="mb-6 scale-110">
-                            <DeptIcon3D iconName={dept.icon} colorClass={dept.color} isHovered={true} />
+                            <DeptIcon3D 
+                                iconName={dept.icon} 
+                                colorClass={dept.color} 
+                                isHovered={true}
+                                layoutId={`dept-icon-${dept.id}`}
+                            />
                         </div>
 
                         <h4 className="text-xl font-bold mb-2 text-white">{dept.name}</h4>
@@ -196,7 +216,8 @@ const Departments: React.FC = () => {
                                     <DeptIcon3D 
                                         iconName={dept.icon} 
                                         colorClass={dept.color} 
-                                        isHovered={hoveredDeptId === dept.id} 
+                                        isHovered={hoveredDeptId === dept.id}
+                                        layoutId={`dept-icon-${dept.id}`}
                                     />
                                     
                                     {/* Name Label */}
@@ -231,9 +252,9 @@ const Departments: React.FC = () => {
       <AnimatePresence>
         {activeDept && (
             <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.95 }} 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
                 className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-lg"
                 onClick={() => setActiveDept(null)}
             >
@@ -248,9 +269,22 @@ const Departments: React.FC = () => {
                     {/* Left: Visual */}
                     <div className="w-full md:w-1/3 bg-gradient-to-br from-slate-900 to-black p-8 flex items-center justify-center relative overflow-hidden">
                         <div className={`absolute inset-0 opacity-20 bg-${activeDept.color.split('-')[1]}-500 blur-3xl`}></div>
-                        <div className="relative z-10 text-center scale-125">
-                            <DeptIcon3D iconName={activeDept.icon} colorClass={activeDept.color} isHovered={true} />
-                            <h2 className="text-3xl font-display font-black text-white mt-6">{activeDept.name}</h2>
+                        <div className="relative z-10 text-center">
+                            <DeptIcon3D 
+                                iconName={activeDept.icon} 
+                                colorClass={activeDept.color} 
+                                isHovered={true}
+                                layoutId={`dept-icon-${activeDept.id}`}
+                                className="w-40 h-40 mx-auto"
+                            />
+                            <motion.h2 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-3xl font-display font-black text-white mt-6"
+                            >
+                                {activeDept.name}
+                            </motion.h2>
                         </div>
                     </div>
 

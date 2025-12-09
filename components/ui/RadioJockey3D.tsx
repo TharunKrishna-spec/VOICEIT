@@ -28,6 +28,11 @@ export const RadioJockey3D = ({ className }: { className?: string }) => {
             <stop offset="0.5" stopColor="#FF8A65" />
             <stop offset="1" stopColor="#FF5722" />
           </linearGradient>
+          <radialGradient id="silverMic" cx="30" cy="280" r="18" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="0.5" stopColor="#94a3b8" />
+            <stop offset="1" stopColor="#334155" />
+          </radialGradient>
           <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="10" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -79,10 +84,21 @@ export const RadioJockey3D = ({ className }: { className?: string }) => {
         />
         
         {/* Mic Boom */}
-        <path d="M75 240 L40 280" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
-        <circle cx="35" cy="285" r="12" fill="#FF5722" filter="url(#glow)" />
+        <path d="M75 240 L40 280" stroke="#94a3b8" strokeWidth="6" strokeLinecap="round" />
+        
+        {/* Mic Ball (Silver Metallic) */}
+        <circle cx="35" cy="285" r="14" fill="url(#silverMic)" stroke="#475569" strokeWidth="1" />
+        
+        {/* Mic Mesh Detail (Texture) */}
+        <path d="M28 280 Q35 280 42 280" stroke="#475569" strokeWidth="0.5" opacity="0.6" />
+        <path d="M26 285 Q35 285 44 285" stroke="#475569" strokeWidth="0.5" opacity="0.6" />
+        <path d="M28 290 Q35 290 42 290" stroke="#475569" strokeWidth="0.5" opacity="0.6" />
+        <path d="M35 275 Q35 285 35 295" stroke="#475569" strokeWidth="0.5" opacity="0.6" />
 
-        {/* Highlights / Reflections */}
+        {/* Mic Highlight (Reflection) */}
+        <circle cx="30" cy="280" r="4" fill="white" opacity="0.6" filter="url(#glow)" />
+
+        {/* Head Highlights / Reflections */}
         <ellipse cx="110" cy="80" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-20 110 80)" />
       </motion.svg>
     </div>
