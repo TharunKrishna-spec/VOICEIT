@@ -15,15 +15,6 @@ export const AnimatedTestimonials = ({
 }) => {
   const [active, setActive] = useState(0);
 
-  // Safety check for empty array
-  if (!testimonials || testimonials.length === 0) {
-    return (
-        <div className={cn("max-w-sm md:max-w-4xl mx-auto px-4 py-20 text-center text-slate-500", className)}>
-            No testimonials available yet.
-        </div>
-    );
-  }
-
   const handleNext = () => {
     setActive((prev) => (prev + 1) % testimonials.length);
   };
@@ -47,10 +38,19 @@ export const AnimatedTestimonials = ({
     return Math.floor(Math.random() * 21) - 10;
   };
 
-  const currentTestimonial = testimonials[active];
+  // Safety check
+  if (!testimonials || testimonials.length === 0) {
+    return (
+        <div className={cn("max-w-sm md:max-w-4xl mx-auto px-4 py-20 text-center text-slate-500", className)}>
+            No testimonials available yet.
+        </div>
+    );
+  }
+
+  const activeTestimonial = testimonials[active];
 
   return (
-    <div className={cn("max-w-sm md:max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-10", className)}>
+    <div className={cn("max-w-sm md:max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-20", className)}>
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-20">
         <div>
           <div className="relative h-80 w-full">
@@ -89,8 +89,8 @@ export const AnimatedTestimonials = ({
                   <img
                     src={testimonial.src}
                     alt={testimonial.name}
-                    draggable={false}
                     className="h-full w-full rounded-3xl object-cover object-center bg-slate-800"
+                    draggable={false}
                   />
                 </motion.div>
               ))}
@@ -118,13 +118,13 @@ export const AnimatedTestimonials = ({
             }}
           >
             <h3 className="text-2xl font-bold text-white">
-              {currentTestimonial?.name}
+              {activeTestimonial.name}
             </h3>
             <p className="text-sm text-slate-400">
-              {currentTestimonial?.designation}
+              {activeTestimonial.designation}
             </p>
             <motion.p className="text-lg text-slate-300 mt-8 leading-relaxed">
-              {currentTestimonial?.quote.split(" ").map((word, index) => (
+              {activeTestimonial.quote.split(" ").map((word, index) => (
                 <motion.span
                   key={index}
                   initial={{
@@ -152,15 +152,15 @@ export const AnimatedTestimonials = ({
           <div className="flex gap-4 pt-12 md:pt-0">
             <button
               onClick={handlePrev}
-              className="h-10 w-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center group/button transition-colors"
+              className="h-10 w-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center group transition-colors"
             >
-              <ArrowLeft className="h-5 w-5 text-white group-hover/button:rotate-12 transition-transform duration-300" />
+              <ArrowLeft className="h-5 w-5 text-white group-hover:rotate-12 transition-transform duration-300" />
             </button>
             <button
               onClick={handleNext}
-              className="h-10 w-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center group/button transition-colors"
+              className="h-10 w-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center group transition-colors"
             >
-              <ArrowRight className="h-5 w-5 text-white group-hover/button:-rotate-12 transition-transform duration-300" />
+              <ArrowRight className="h-5 w-5 text-white group-hover:-rotate-12 transition-transform duration-300" />
             </button>
           </div>
         </div>

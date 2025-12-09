@@ -142,7 +142,7 @@ export const initialRecruitment: RecruitmentData = {
 };
 
 export const initialSocialLinks: SocialLinks = {
-  instagram: 'https://instagram.com',
+  instagram: 'https://www.instagram.com/voiceit_vitcc/',
   youtube: 'https://youtube.com',
   spotify: 'https://spotify.com',
   email: 'mailto:contact@voiceit.com'

@@ -12,9 +12,12 @@ interface AdminModalProps {
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, title, children }) => {
   // Prevent scrolling when open
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    if (isOpen) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   return (

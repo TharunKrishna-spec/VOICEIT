@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Section from './ui/Section';
 import { motion } from 'framer-motion';
-import { AnimatedTestimonials } from './ui/AnimatedTestimonials';
 import { useAdmin } from '../context/AdminContext';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import AdminModal from './ui/AdminModal';
 import { Testimonial } from '../types';
+import { AnimatedTestimonials } from './ui/AnimatedTestimonials';
 
 const Testimonials: React.FC = () => {
   const { testimonials, user, addTestimonial, deleteTestimonial } = useAdmin();
@@ -21,7 +21,7 @@ const Testimonials: React.FC = () => {
 
   return (
     <Section id="testimonials" className="bg-black py-20 relative">
-      <div className="text-center mb-10 relative z-10">
+      <div className="text-center mb-0 relative z-10">
         <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="text-neon-orange font-bold tracking-wider uppercase text-sm mb-2">
             Voices of VoiceIt
         </motion.h2>
@@ -36,7 +36,12 @@ const Testimonials: React.FC = () => {
         )}
       </div>
 
-      <AnimatedTestimonials testimonials={testimonials} autoplay={true} />
+      <div className="w-full">
+        <AnimatedTestimonials 
+            testimonials={testimonials} 
+            autoplay={true}
+        />
+      </div>
 
       {/* Admin Modal for Managing Testimonials */}
       <AdminModal isOpen={isManaging} onClose={() => setIsManaging(false)} title="Manage Testimonials">
@@ -53,7 +58,7 @@ const Testimonials: React.FC = () => {
                   </form>
               </div>
 
-              {/* List Existing */}
+              {/* List Existing (Fallback list if slider management isn't enough) */}
               <div className="space-y-2">
                   <h4 className="text-sm font-bold text-white mb-2">Existing Testimonials</h4>
                   {testimonials.map(t => (
