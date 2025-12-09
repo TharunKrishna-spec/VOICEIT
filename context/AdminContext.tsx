@@ -2,6 +2,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData } from '../types';
 import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout } from '../lib/initialData';
+import { auth, db } from '../lib/firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, addDoc, getDoc } from 'firebase/firestore';
 
 interface User {
   uid: string;
@@ -77,189 +80,190 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [recruitment, setRecruitment] = useState<RecruitmentData>(initialRecruitment);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>(initialSocialLinks);
 
-  // Load from LocalStorage on mount
+  // --- AUTH LISTENER ---
   useEffect(() => {
-    const loadData = () => {
-      const storedHero = localStorage.getItem('voiceit_hero');
-      if (storedHero) setHeroData(JSON.parse(storedHero));
-
-      const storedAbout = localStorage.getItem('voiceit_about');
-      if (storedAbout) setAboutData(JSON.parse(storedAbout));
-
-      const storedDepts = localStorage.getItem('voiceit_departments');
-      if (storedDepts) setDepartments(JSON.parse(storedDepts));
-
-      const storedEvents = localStorage.getItem('voiceit_events');
-      if (storedEvents) setEvents(JSON.parse(storedEvents));
-
-      const storedBoard = localStorage.getItem('voiceit_board');
-      if (storedBoard) setBoardMembers(JSON.parse(storedBoard));
-
-      const storedLeads = localStorage.getItem('voiceit_leads');
-      if (storedLeads) setLeads(JSON.parse(storedLeads));
-      
-      const storedPodcasts = localStorage.getItem('voiceit_podcasts');
-      if (storedPodcasts) setPodcasts(JSON.parse(storedPodcasts));
-
-      const storedPastTenures = localStorage.getItem('voiceit_past_tenures');
-      if (storedPastTenures) setPastTenures(JSON.parse(storedPastTenures));
-
-      const storedPastLeadTenures = localStorage.getItem('voiceit_past_lead_tenures');
-      if (storedPastLeadTenures) setPastLeadTenures(JSON.parse(storedPastLeadTenures));
-      
-      const storedTestimonials = localStorage.getItem('voiceit_testimonials');
-      if (storedTestimonials) setTestimonials(JSON.parse(storedTestimonials));
-
-      const storedRecruitment = localStorage.getItem('voiceit_recruitment');
-      if (storedRecruitment) setRecruitment(JSON.parse(storedRecruitment));
-      
-      const storedSocial = localStorage.getItem('voiceit_social');
-      if (storedSocial) setSocialLinks(JSON.parse(storedSocial));
-
-      const storedUser = localStorage.getItem('voiceit_user');
-      if (storedUser) setUser(JSON.parse(storedUser));
-
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({ uid: currentUser.uid, email: currentUser.email });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
-    };
-    loadData();
+    });
+    return () => unsubscribe();
   }, []);
 
-  // Helper to save to state and localStorage
-  const save = (key: string, data: any, setter: React.Dispatch<any>) => {
-    setter(data);
-    localStorage.setItem(key, JSON.stringify(data));
+  // --- DATA LISTENERS & SEEDING ---
+  // Helper to subscribe to a collection
+  const subscribeToCollection = (colName: string, setter: React.Dispatch<any>, initial: any[]) => {
+    const colRef = collection(db, colName);
+    return onSnapshot(colRef, (snapshot) => {
+        if (snapshot.empty && initial.length > 0) {
+            // Seed if empty (Auto-Migration)
+            initial.forEach(item => {
+                // If item has an id, use it, otherwise let firestore gen it
+                if (item.id) {
+                    setDoc(doc(db, colName, item.id), item).catch(console.error);
+                } else {
+                    addDoc(colRef, item).catch(console.error);
+                }
+            });
+            setter(initial);
+        } else {
+            const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            if (data.length > 0) setter(data);
+        }
+    });
   };
 
-  // --- AUTH ---
+  // Helper to subscribe to a single document (content)
+  const subscribeToDoc = (docName: string, setter: React.Dispatch<any>, initial: any) => {
+    const docRef = doc(db, 'content', docName);
+    return onSnapshot(docRef, (snapshot) => {
+        if (!snapshot.exists()) {
+            // Seed
+            setDoc(docRef, initial).catch(console.error);
+            setter(initial);
+        } else {
+            setter(snapshot.data());
+        }
+    });
+  };
+
+  useEffect(() => {
+    const unsubs = [
+        subscribeToDoc('hero', setHeroData, initialHero),
+        subscribeToDoc('about', setAboutData, initialAbout),
+        subscribeToDoc('recruitment', setRecruitment, initialRecruitment),
+        subscribeToDoc('social', setSocialLinks, initialSocialLinks),
+        
+        subscribeToCollection('departments', setDepartments, initialDepartments),
+        subscribeToCollection('events', setEvents, initialEvents),
+        subscribeToCollection('boardMembers', setBoardMembers, initialBoard),
+        subscribeToCollection('leads', setLeads, initialLeads),
+        subscribeToCollection('podcasts', setPodcasts, initialPodcasts),
+        subscribeToCollection('pastTenures', setPastTenures, initialPastTenures),
+        subscribeToCollection('pastLeadTenures', setPastLeadTenures, initialPastLeadTenures),
+        subscribeToCollection('testimonials', setTestimonials, initialTestimonials)
+    ];
+
+    return () => {
+        unsubs.forEach(unsub => unsub());
+    };
+  }, []);
+
+
+  // --- AUTH ACTIONS ---
 
   const login = async (email: string, pass: string) => {
-    // Mock Login
-    if (email === 'admin@voiceit.com' && pass === 'admin') {
-      const u = { uid: 'admin-123', email };
-      save('voiceit_user', u, setUser);
-      return true;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        return true;
+    } catch (e) {
+        console.error("Login Error", e);
+        return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('voiceit_user');
+  const logout = async () => {
+    await signOut(auth);
     setIsLoginOpen(false);
   };
 
-  // --- ACTIONS ---
+  // --- DATA ACTIONS ---
 
   const updateHero = async (data: Partial<HeroData>) => {
     const newData = { ...heroData, ...data };
-    save('voiceit_hero', newData, setHeroData);
+    // Optimistic update
+    setHeroData(newData);
+    await setDoc(doc(db, 'content', 'hero'), newData, { merge: true });
   };
 
   const updateAbout = async (data: AboutData) => {
-    save('voiceit_about', data, setAboutData);
+    setAboutData(data);
+    await setDoc(doc(db, 'content', 'about'), data);
   };
 
   const updateDepartment = async (id: string, data: Partial<Department>) => {
-    const newData = departments.map(d => d.id === id ? { ...d, ...data } : d);
-    save('voiceit_departments', newData, setDepartments);
+    await updateDoc(doc(db, 'departments', id), data);
   };
 
   const addEvent = async (event: Omit<EventItem, 'id'>) => {
-    const newItem = { ...event, id: Date.now().toString() };
-    const newData = [...events, newItem];
-    save('voiceit_events', newData, setEvents);
+    await addDoc(collection(db, 'events'), event);
   };
 
   const updateEvent = async (id: string, data: Partial<EventItem>) => {
-    const newData = events.map(e => e.id === id ? { ...e, ...data } : e);
-    save('voiceit_events', newData, setEvents);
+    await updateDoc(doc(db, 'events', id), data);
   };
 
   const deleteEvent = async (id: string) => {
-    const newData = events.filter(e => e.id !== id);
-    save('voiceit_events', newData, setEvents);
+    await deleteDoc(doc(db, 'events', id));
   };
 
   const addBoardMember = async (member: Omit<BoardMember, 'id'>) => {
-    const newItem = { ...member, id: Date.now().toString() };
-    const newData = [...boardMembers, newItem];
-    save('voiceit_board', newData, setBoardMembers);
+    await addDoc(collection(db, 'boardMembers'), member);
   };
 
   const deleteBoardMember = async (id: string) => {
-    const newData = boardMembers.filter(m => m.id !== id);
-    save('voiceit_board', newData, setBoardMembers);
+    await deleteDoc(doc(db, 'boardMembers', id));
   };
 
   const addLead = async (lead: Omit<Lead, 'id'>) => {
-    const newItem = { ...lead, id: Date.now().toString() };
-    const newData = [...leads, newItem];
-    save('voiceit_leads', newData, setLeads);
+    await addDoc(collection(db, 'leads'), lead);
   };
 
   const deleteLead = async (id: string) => {
-    const newData = leads.filter(l => l.id !== id);
-    save('voiceit_leads', newData, setLeads);
+    await deleteDoc(doc(db, 'leads', id));
   };
 
   const addPodcast = async (podcast: Omit<Podcast, 'id'>) => {
-    const newItem = { ...podcast, id: Date.now().toString() };
-    const newData = [...podcasts, newItem];
-    save('voiceit_podcasts', newData, setPodcasts);
+    await addDoc(collection(db, 'podcasts'), podcast);
   };
 
   const deletePodcast = async (id: string) => {
-    const newData = podcasts.filter(p => p.id !== id);
-    save('voiceit_podcasts', newData, setPodcasts);
+    await deleteDoc(doc(db, 'podcasts', id));
   };
 
   const archiveBoard = async (year: string) => {
-    const newTenure: PastTenure = {
-        id: Date.now().toString(),
+    const newTenure = {
         year: year,
         members: [...boardMembers]
     };
-    const newData = [newTenure, ...pastTenures];
-    save('voiceit_past_tenures', newData, setPastTenures);
+    await addDoc(collection(db, 'pastTenures'), newTenure);
   };
 
   const deletePastTenure = async (id: string) => {
-    const newData = pastTenures.filter(t => t.id !== id);
-    save('voiceit_past_tenures', newData, setPastTenures);
+    await deleteDoc(doc(db, 'pastTenures', id));
   };
 
   const archiveLeads = async (year: string) => {
-    const newTenure: PastLeadTenure = {
-        id: Date.now().toString(),
+     const newTenure = {
         year: year,
         leads: [...leads]
     };
-    const newData = [newTenure, ...pastLeadTenures];
-    save('voiceit_past_lead_tenures', newData, setPastLeadTenures);
+    await addDoc(collection(db, 'pastLeadTenures'), newTenure);
   };
 
   const deletePastLeadTenure = async (id: string) => {
-    const newData = pastLeadTenures.filter(t => t.id !== id);
-    save('voiceit_past_lead_tenures', newData, setPastLeadTenures);
+    await deleteDoc(doc(db, 'pastLeadTenures', id));
   };
 
   const addTestimonial = async (testimonial: Omit<Testimonial, 'id'>) => {
-    const newItem = { ...testimonial, id: Date.now().toString() };
-    const newData = [...testimonials, newItem];
-    save('voiceit_testimonials', newData, setTestimonials);
+    await addDoc(collection(db, 'testimonials'), testimonial);
   };
 
   const deleteTestimonial = async (id: string) => {
-    const newData = testimonials.filter(t => t.id !== id);
-    save('voiceit_testimonials', newData, setTestimonials);
+    await deleteDoc(doc(db, 'testimonials', id));
   };
 
   const updateRecruitment = async (data: RecruitmentData) => {
-    save('voiceit_recruitment', data, setRecruitment);
+    setRecruitment(data);
+    await setDoc(doc(db, 'content', 'recruitment'), data);
   };
 
   const updateSocialLinks = async (data: SocialLinks) => {
-    save('voiceit_social', data, setSocialLinks);
+    setSocialLinks(data);
+    await setDoc(doc(db, 'content', 'social'), data);
   };
 
   return (

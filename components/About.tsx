@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import Section from './ui/Section';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useAdmin } from '../context/AdminContext';
 import { Edit } from 'lucide-react';
 import AdminModal from './ui/AdminModal';
@@ -11,8 +11,8 @@ import { getIcon, IconMap } from '../lib/iconMap';
 const FeatureItem = ({ iconName, title, text }: { iconName: string, title: string, text: string }) => {
   const Icon = getIcon(iconName);
   return (
-    <div className="flex gap-4 items-start">
-      <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-neon-orange shadow-[0_0_10px_rgba(255,87,34,0.1)]">
+    <div className="flex gap-4 items-start h-full">
+      <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-neon-orange shadow-[0_0_10px_rgba(255,87,34,0.1)] flex-shrink-0">
           <Icon size={24} />
       </div>
       <div>
@@ -47,6 +47,46 @@ const About: React.FC = () => {
     setEditForm({ ...editForm, images: newImages });
   };
 
+  // Animation Variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: { duration: 0.6, ease: "easeOut" }
+    }
+  };
+
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" }
+    }
+  };
+
+  const imageVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.9, filter: "blur(10px)" },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      filter: "blur(0px)",
+      transition: { duration: 0.8, ease: "circOut" }
+    }
+  };
+
   return (
     <Section id="about" className="bg-slate-950 relative">
       {user && (
@@ -62,51 +102,89 @@ const About: React.FC = () => {
         
         {/* Content Side */}
         <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
         >
-          <h2 className="text-neon-orange font-bold tracking-wider mb-2 uppercase text-sm">{aboutData.sectionTitle}</h2>
-          <h3 className="text-4xl md:text-5xl font-display font-bold mb-6">{aboutData.mainTitle}</h3>
-          <p className="text-slate-400 text-lg leading-relaxed mb-8">
+          <motion.h2 variants={itemVariants} className="text-neon-orange font-bold tracking-wider mb-2 uppercase text-sm">
+            {aboutData.sectionTitle}
+          </motion.h2>
+          <motion.h3 variants={itemVariants} className="text-4xl md:text-5xl font-display font-bold mb-6">
+            {aboutData.mainTitle}
+          </motion.h3>
+          <motion.p variants={itemVariants} className="text-slate-400 text-lg leading-relaxed mb-8">
             {aboutData.description}
-          </p>
+          </motion.p>
 
-          <div className="grid sm:grid-cols-2 gap-8">
+          <motion.div 
+            variants={containerVariants}
+            className="grid sm:grid-cols-2 gap-8"
+          >
              {aboutData.features.map((feature) => (
-                 <FeatureItem 
-                    key={feature.id}
-                    iconName={feature.icon} 
-                    title={feature.title} 
-                    text={feature.text}
-                 />
+                 <motion.div key={feature.id} variants={cardVariants}>
+                    <FeatureItem 
+                        iconName={feature.icon} 
+                        title={feature.title} 
+                        text={feature.text}
+                    />
+                 </motion.div>
              ))}
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Visual Side - Collage */}
         <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
             className="relative"
         >
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4 translate-y-8">
-                    <img src={aboutData.images[0]} alt="Gallery 1" className="rounded-2xl object-cover h-64 w-full opacity-80 hover:opacity-100 transition-opacity duration-300 border border-slate-800" />
-                    <img src={aboutData.images[1]} alt="Gallery 2" className="rounded-2xl object-cover h-48 w-full opacity-80 hover:opacity-100 transition-opacity duration-300 border border-slate-800" />
+                    <motion.img 
+                        variants={imageVariants} 
+                        src={aboutData.images[0]} 
+                        alt="Gallery 1" 
+                        className="rounded-2xl object-cover h-64 w-full opacity-90 hover:opacity-100 transition-opacity duration-300 border border-slate-800 shadow-xl" 
+                    />
+                    <motion.img 
+                        variants={imageVariants} 
+                        src={aboutData.images[1]} 
+                        alt="Gallery 2" 
+                        className="rounded-2xl object-cover h-48 w-full opacity-90 hover:opacity-100 transition-opacity duration-300 border border-slate-800 shadow-xl" 
+                    />
                 </div>
                 <div className="space-y-4">
-                    <img src={aboutData.images[2]} alt="Gallery 3" className="rounded-2xl object-cover h-48 w-full opacity-80 hover:opacity-100 transition-opacity duration-300 border border-slate-800" />
-                    <img src={aboutData.images[3]} alt="Gallery 4" className="rounded-2xl object-cover h-64 w-full opacity-80 hover:opacity-100 transition-opacity duration-300 border border-slate-800" />
+                    <motion.img 
+                        variants={imageVariants} 
+                        src={aboutData.images[2]} 
+                        alt="Gallery 3" 
+                        className="rounded-2xl object-cover h-48 w-full opacity-90 hover:opacity-100 transition-opacity duration-300 border border-slate-800 shadow-xl" 
+                    />
+                    <motion.img 
+                        variants={imageVariants} 
+                        src={aboutData.images[3]} 
+                        alt="Gallery 4" 
+                        className="rounded-2xl object-cover h-64 w-full opacity-90 hover:opacity-100 transition-opacity duration-300 border border-slate-800 shadow-xl" 
+                    />
                 </div>
             </div>
             
             {/* Decorative Elements */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-neon-orange/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-neon-red/20 rounded-full blur-3xl"></div>
+            <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, duration: 1 }}
+                className="absolute -top-10 -right-10 w-32 h-32 bg-neon-orange/20 rounded-full blur-3xl pointer-events-none"
+            />
+            <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7, duration: 1 }}
+                className="absolute -bottom-10 -left-10 w-32 h-32 bg-neon-red/20 rounded-full blur-3xl pointer-events-none"
+            />
         </motion.div>
 
       </div>

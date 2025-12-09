@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import AdminModal from './ui/AdminModal';
@@ -23,11 +24,11 @@ const AdminLogin: React.FC = () => {
       if (success) {
         closeLoginModal();
       } else {
-        setError('Invalid credentials. Try admin@voiceit.com / admin');
+        setError('Invalid credentials. Please check your Firebase Authentication users.');
       }
     } catch (err: any) {
       console.error(err);
-      setError('Login failed.');
+      setError('Login failed. Check console for details.');
     } finally {
       setIsLoading(false);
     }
@@ -41,9 +42,9 @@ const AdminLogin: React.FC = () => {
         {error && <div className="p-3 bg-red-500/20 border border-red-500 rounded text-red-200 text-sm">{error}</div>}
         
         <div className="bg-slate-800 p-3 rounded text-xs text-slate-400 mb-4">
-            <p><strong>Demo Credentials:</strong></p>
-            <p>Email: admin@voiceit.com</p>
-            <p>Pass: admin</p>
+            <p><strong>Login Required:</strong></p>
+            <p>Please sign in with the account you created in Firebase.</p>
+            <p className="mt-1 text-neon-orange">e.g., admin@voiceit.in</p>
         </div>
 
         <div>
