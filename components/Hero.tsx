@@ -17,6 +17,16 @@ const Hero: React.FC = () => {
     setIsEditing(false);
   };
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+        const yOffset = -100; 
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-20 md:pt-0">
       
@@ -96,14 +106,22 @@ const Hero: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
                 className="flex flex-col sm:flex-row gap-4"
             >
-              <a href="#about" className="group relative px-8 py-4 bg-slate-900 rounded-full border border-slate-700 hover:border-neon-orange transition-all duration-300 overflow-hidden text-center sm:text-left">
+              <a 
+                href="#about" 
+                onClick={(e) => scrollToSection(e, 'about')}
+                className="group relative px-8 py-4 bg-slate-900 rounded-full border border-slate-700 hover:border-neon-orange transition-all duration-300 overflow-hidden text-center sm:text-left cursor-pointer"
+              >
                  <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2 font-semibold">
                     Explore Club <Play size={18} className="group-hover:translate-x-1 transition-transform text-neon-orange" />
                  </span>
                  <div className="absolute inset-0 bg-neon-orange/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               </a>
 
-              <a href="#join" className="group relative px-8 py-4 bg-white text-black rounded-full font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all duration-300 text-center sm:text-left">
+              <a 
+                href="#join" 
+                onClick={(e) => scrollToSection(e, 'join')}
+                className="group relative px-8 py-4 bg-white text-black rounded-full font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all duration-300 text-center sm:text-left cursor-pointer"
+              >
                  <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2">
                     Join Us <div className="w-2 h-2 rounded-full bg-neon-orange animate-pulse"></div>
                  </span>
@@ -165,3 +183,4 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+    
