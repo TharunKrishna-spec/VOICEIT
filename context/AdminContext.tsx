@@ -1,6 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks } from '../types';
-import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks } from '../lib/initialData';
+import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData } from '../types';
+import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout } from '../lib/initialData';
 
 interface User {
   uid: string;
@@ -11,6 +12,7 @@ interface AdminContextType {
   user: User | null;
   loading: boolean;
   heroData: HeroData;
+  aboutData: AboutData;
   departments: Department[];
   events: EventItem[];
   boardMembers: BoardMember[];
@@ -27,6 +29,7 @@ interface AdminContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   logout: () => void;
   updateHero: (data: Partial<HeroData>) => Promise<void>;
+  updateAbout: (data: AboutData) => Promise<void>;
   updateDepartment: (id: string, data: Partial<Department>) => Promise<void>;
   addEvent: (event: Omit<EventItem, 'id'>) => Promise<void>;
   updateEvent: (id: string, data: Partial<EventItem>) => Promise<void>;
@@ -62,6 +65,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Data States
   const [heroData, setHeroData] = useState<HeroData>(initialHero);
+  const [aboutData, setAboutData] = useState<AboutData>(initialAbout);
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [events, setEvents] = useState<EventItem[]>(initialEvents);
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>(initialBoard);
@@ -78,6 +82,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const loadData = () => {
       const storedHero = localStorage.getItem('voiceit_hero');
       if (storedHero) setHeroData(JSON.parse(storedHero));
+
+      const storedAbout = localStorage.getItem('voiceit_about');
+      if (storedAbout) setAboutData(JSON.parse(storedAbout));
 
       const storedDepts = localStorage.getItem('voiceit_departments');
       if (storedDepts) setDepartments(JSON.parse(storedDepts));
@@ -146,6 +153,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateHero = async (data: Partial<HeroData>) => {
     const newData = { ...heroData, ...data };
     save('voiceit_hero', newData, setHeroData);
+  };
+
+  const updateAbout = async (data: AboutData) => {
+    save('voiceit_about', data, setAboutData);
   };
 
   const updateDepartment = async (id: string, data: Partial<Department>) => {
@@ -253,10 +264,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <AdminContext.Provider value={{
-      user, loading, heroData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks,
+      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks,
       isLoginOpen, openLoginModal: () => setIsLoginOpen(true), closeLoginModal: () => setIsLoginOpen(false),
       login, logout,
-      updateHero, updateDepartment,
+      updateHero, updateAbout, updateDepartment,
       addEvent, updateEvent, deleteEvent,
       addBoardMember, deleteBoardMember,
       addLead, deleteLead,

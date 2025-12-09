@@ -73,6 +73,21 @@ export interface HeroData {
   description: string;
 }
 
+export interface AboutFeature {
+  id: string;
+  title: string;
+  text: string;
+  icon: string;
+}
+
+export interface AboutData {
+  sectionTitle: string;
+  mainTitle: string;
+  description: string;
+  features: AboutFeature[];
+  images: string[];
+}
+
 export interface RecruitmentData {
   isOpen: boolean;
   link: string;

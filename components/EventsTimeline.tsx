@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import Section from './ui/Section';
 import { ArrowRight, Plus, Trash2, Edit, Search, ArrowLeft, Calendar, X, MapPin } from 'lucide-react';
@@ -90,7 +91,16 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEd
   );
 };
 
-const ArchiveView = ({ events, onBack }: { events: EventItem[], onBack: () => void }) => {
+interface ArchiveViewProps {
+    events: EventItem[];
+    onBack: () => void;
+    isAdmin: boolean;
+    onEdit: (e: EventItem) => void;
+    onDelete: (id: string) => void;
+    onRecap: (e: EventItem) => void;
+}
+
+const ArchiveView = ({ events, onBack, isAdmin, onEdit, onDelete, onRecap }: ArchiveViewProps) => {
     const [filter, setFilter] = useState('');
     
     const filteredEvents = events.filter(e => 
@@ -136,8 +146,26 @@ const ArchiveView = ({ events, onBack }: { events: EventItem[], onBack: () => vo
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             whileHover={{ y: -5 }}
-                            className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl hover:bg-slate-900 hover:border-neon-orange/30 transition-all duration-300 flex flex-col h-full group"
+                            className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl hover:bg-slate-900 hover:border-neon-orange/30 transition-all duration-300 flex flex-col h-full group relative"
                         >
+                            {/* Admin Controls */}
+                            {isAdmin && (
+                                <div className="absolute top-4 right-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onEdit(event); }} 
+                                        className="p-1.5 bg-blue-600 rounded text-white hover:bg-blue-500 shadow-lg"
+                                    >
+                                        <Edit size={14}/>
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); onDelete(event.id); }} 
+                                        className="p-1.5 bg-red-600 rounded text-white hover:bg-red-500 shadow-lg"
+                                    >
+                                        <Trash2 size={14}/>
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-neon-orange group-hover:scale-110 transition-transform">
                                     <Icon size={24} />
@@ -149,9 +177,12 @@ const ArchiveView = ({ events, onBack }: { events: EventItem[], onBack: () => vo
                             <h3 className="text-xl font-bold text-white mb-2 group-hover:text-neon-orange transition-colors">{event.title}</h3>
                             <p className="text-slate-400 text-sm line-clamp-4 mb-4 flex-grow leading-relaxed">{event.description}</p>
                             
-                            <div className="pt-4 border-t border-slate-800/50 flex items-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-white transition-colors">
-                                <Calendar size={14} className="mr-2" /> Recorded Event
-                            </div>
+                            <button 
+                                onClick={() => onRecap(event)}
+                                className="pt-4 border-t border-slate-800/50 flex items-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-white transition-colors hover:underline"
+                            >
+                                Read Recap <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                            </button>
                         </motion.div>
                     )
                 })}
@@ -357,7 +388,14 @@ const EventsTimeline: React.FC = () => {
                 transition={{ duration: 0.3 }}
                 className="relative z-10"
             >
-                <ArchiveView events={events} onBack={() => setShowArchive(false)} />
+                <ArchiveView 
+                    events={events} 
+                    onBack={() => setShowArchive(false)} 
+                    isAdmin={!!user}
+                    onEdit={handleEdit}
+                    onDelete={deleteEvent}
+                    onRecap={setSelectedRecapEvent}
+                />
             </motion.div>
         )}
       </AnimatePresence>

@@ -1,4 +1,5 @@
-import { Mic, Video, Edit, PenTool, Share2, Languages, Radio, Activity, Calendar, Sparkles, Music4, Star, User, Headphones, Globe } from 'lucide-react';
+
+import { Mic, Video, Edit, PenTool, Share2, Languages, Radio, Activity, Calendar, Sparkles, Music4, Star, User, Users, Headphones, Globe, Music } from 'lucide-react';
 
 export const IconMap: Record<string, any> = {
   'Mic': Mic,
@@ -12,8 +13,10 @@ export const IconMap: Record<string, any> = {
   'Calendar': Calendar,
   'Sparkles': Sparkles,
   'Music4': Music4,
+  'Music': Music,
   'Star': Star,
   'User': User,
+  'Users': Users,
   'Headphones': Headphones,
   'Globe': Globe
 };
