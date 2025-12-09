@@ -1,45 +1,10 @@
+
 import React, { useState } from 'react';
 import { Play, Edit } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAdmin } from '../context/AdminContext';
 import AdminModal from './ui/AdminModal';
-
-const StudioMicSVG = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 200 400" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <defs>
-      <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#2c2c2c" />
-        <stop offset="50%" stopColor="#4a4a4a" />
-        <stop offset="100%" stopColor="#2c2c2c" />
-      </linearGradient>
-      <linearGradient id="grilleGrad" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="#1a1a1a" />
-        <stop offset="50%" stopColor="#333" />
-        <stop offset="100%" stopColor="#1a1a1a" />
-      </linearGradient>
-    </defs>
-    <path d="M50 140 L50 280" stroke="#FF5722" strokeWidth="2" strokeDasharray="4 2" />
-    <path d="M150 140 L150 280" stroke="#FF5722" strokeWidth="2" strokeDasharray="4 2" />
-    <path d="M40 220 V260 Q40 310 100 310 Q160 310 160 260 V220" stroke="#333" strokeWidth="6" strokeLinecap="round" fill="none" />
-    <circle cx="40" cy="220" r="6" fill="#555" />
-    <circle cx="160" cy="220" r="6" fill="#555" />
-    <rect x="70" y="80" width="60" height="180" rx="30" fill="url(#bodyGrad)" stroke="#111" strokeWidth="1" />
-    <rect x="70" y="80" width="60" height="80" rx="30" fill="url(#grilleGrad)" />
-    <path d="M70 100 H130" stroke="#444" strokeWidth="1" />
-    <path d="M70 115 H130" stroke="#444" strokeWidth="1" />
-    <path d="M70 130 H130" stroke="#444" strokeWidth="1" />
-    <path d="M70 145 H130" stroke="#444" strokeWidth="1" />
-    <path d="M90 80 V160" stroke="#444" strokeWidth="1" opacity="0.5" />
-    <path d="M110 80 V160" stroke="#444" strokeWidth="1" opacity="0.5" />
-    <rect x="68" y="160" width="64" height="12" fill="#111" />
-    <circle cx="100" cy="166" r="3" fill="#ef4444" className="animate-pulse">
-        <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-    </circle>
-    <rect x="90" y="310" width="20" height="90" fill="#222" />
-    <path d="M85 90 Q80 120 85 150" stroke="white" strokeWidth="2" strokeOpacity="0.1" fill="none" />
-    <path d="M85 180 Q80 220 85 250" stroke="white" strokeWidth="2" strokeOpacity="0.05" fill="none" />
-  </svg>
-);
+import { RadioJockey3D } from './ui/RadioJockey3D';
 
 const Hero: React.FC = () => {
   const { user, heroData, updateHero } = useAdmin();
@@ -53,13 +18,13 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-20 lg:pt-0">
+    <div id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-20 md:pt-0">
       
-      {/* Edit Trigger */}
+      {/* Edit Trigger - Moved to left to avoid right-aligned nav */}
       {user && (
         <button 
             onClick={() => { setEditForm(heroData); setIsEditing(true); }}
-            className="absolute top-24 right-6 z-50 p-2 bg-neon-orange text-black rounded-full hover:bg-white transition-colors"
+            className="absolute top-24 left-6 z-40 p-2 bg-neon-orange text-black rounded-full hover:bg-white transition-colors"
         >
             <Edit size={20} />
         </button>
@@ -176,7 +141,7 @@ const Hero: React.FC = () => {
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             >
                 <div className="drop-shadow-[0_10px_40px_rgba(255,87,34,0.2)]">
-                     <StudioMicSVG className="w-48 h-80 lg:w-64 lg:h-96" />
+                     <RadioJockey3D className="w-48 h-80 lg:w-64 lg:h-96" />
                 </div>
             </motion.div>
 

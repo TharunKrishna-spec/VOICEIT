@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../lib/utils';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
+  const [activeSection, setActiveSection] = useState('hero');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,21 +15,20 @@ const Navbar: React.FC = () => {
     };
 
     const handleSpy = () => {
-        const sections = ['about', 'events', 'podcasts', 'departments', 'team'];
-        let current = '';
+        const sections = ['hero', 'about', 'events', 'podcasts', 'departments', 'team'];
         
-        // Find the section that is currently most visible in the viewport
-        for (const section of sections) {
+        // Find the current section
+        const current = sections.find(section => {
             const element = document.getElementById(section);
             if (element) {
                 const rect = element.getBoundingClientRect();
-                // If top is near top of viewport OR bottom is still in view
-                if (rect.top <= 200 && rect.bottom >= 200) {
-                    current = section;
-                }
+                // Check if the top of the section is within the viewport (with some offset)
+                return rect.top <= 200 && rect.bottom >= 200;
             }
-        }
-        setActiveSection(current);
+            return false;
+        });
+
+        if (current) setActiveSection(current);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -38,74 +39,98 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+        // Offset for the fixed navbar
+        const yOffset = -100; 
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        setActiveSection(id);
+        setIsMobileMenuOpen(false);
+    }
+  };
+
   const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Events', href: '#events' },
-    { name: 'Podcasts', href: '#podcasts' },
-    { name: 'Departments', href: '#departments' },
-    { name: 'Team', href: '#team' },
+    { name: 'About', href: '#about', id: 'about' },
+    { name: 'Events', href: '#events', id: 'events' },
+    { name: 'Podcasts', href: '#podcasts', id: 'podcasts' },
+    { name: 'Depts', href: '#departments', id: 'departments' },
+    { name: 'Team', href: '#team', id: 'team' },
   ];
 
   return (
     <>
+    {/* Desktop Floating Dock - Right Aligned */}
     <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
+      className={cn(
+        "fixed top-6 right-8 z-50 hidden md:flex items-center gap-2 px-2 py-2 rounded-full border transition-all duration-300 origin-right",
         isScrolled 
-            ? 'bg-black/80 backdrop-blur-xl border-slate-800 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
-            : 'bg-transparent border-transparent py-6'
-      }`}
+            ? "bg-black/80 backdrop-blur-xl border-slate-700/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]" 
+            : "bg-black/40 backdrop-blur-md border-white/10"
+      )}
     >
-      <div className="container mx-auto px-6 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2 group relative z-50">
-            {/* Logo Container with Glow */}
-            <div className="relative">
-                <div className="absolute inset-0 bg-neon-orange blur-lg opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
-                <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-neon-orange to-neon-red flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                    <span className="font-black text-white text-xs">V</span>
-                </div>
-            </div>
-            <span className="font-display font-bold text-xl tracking-wider text-white group-hover:text-neon-orange transition-colors duration-300">VOICEIT</span>
-        </a>
-
-        {/* Desktop Nav - Floating Glass Pill */}
-        <div className="hidden md:flex items-center gap-8">
-            <div className="flex items-center bg-slate-900/40 rounded-full px-6 py-2 border border-slate-800/50 backdrop-blur-md shadow-lg">
-                {navLinks.map((link) => (
-                    <a 
-                        key={link.name} 
-                        href={link.href} 
-                        className={`text-sm font-bold px-4 py-1 transition-colors relative group ${activeSection === link.href.substring(1) ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                        {link.name}
-                        {/* Active Indicator */}
-                        {activeSection === link.href.substring(1) && (
-                            <motion.span 
-                                layoutId="activeSection"
-                                className="absolute -bottom-2 left-0 right-0 h-0.5 bg-neon-orange shadow-[0_0_8px_rgba(255,87,34,0.8)] mx-2 rounded-full"
+        {/* Links */}
+        <ul className="flex items-center gap-1">
+            {navLinks.map((link) => {
+                const isActive = activeSection === link.id;
+                return (
+                    <li key={link.name} className="relative">
+                        <a 
+                            href={link.href}
+                            onClick={(e) => scrollToSection(e, link.id)}
+                            className={cn(
+                                "relative z-10 block px-5 py-2 text-sm font-bold transition-colors duration-300",
+                                isActive ? "text-white" : "text-slate-400 hover:text-slate-200"
+                            )}
+                        >
+                            {link.name}
+                        </a>
+                        {isActive && (
+                            <motion.div
+                                layoutId="activePill"
+                                className="absolute inset-0 bg-slate-800/80 rounded-full border border-slate-600"
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             />
                         )}
-                    </a>
-                ))}
-            </div>
-            
-            <a href="#join" className="group relative px-6 py-2.5 rounded-full bg-white text-black text-sm font-bold overflow-hidden transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-white">
-                <span className="relative z-10 group-hover:text-white transition-colors duration-300 flex items-center gap-2">Join Us</span>
-                <div className="absolute inset-0 bg-neon-orange translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-            </a>
-        </div>
+                    </li>
+                );
+            })}
+        </ul>
 
-        {/* Mobile Toggle */}
-        <button 
-            className="md:hidden text-white hover:text-neon-orange transition-colors relative z-50 p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        <div className="w-px h-6 bg-slate-700 mx-2"></div>
+
+        {/* CTA */}
+        <a 
+            href="#join"
+            onClick={(e) => scrollToSection(e, 'join')}
+            className="group relative flex items-center gap-2 px-5 py-2.5 bg-white rounded-full text-black font-bold text-sm overflow-hidden hover:bg-neon-orange transition-colors duration-300"
         >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </div>
+            <span className="relative z-10">Join</span>
+            <ArrowRight size={14} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+        </a>
     </motion.nav>
+
+    {/* Mobile Bar */}
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center bg-black/90 backdrop-blur-lg border-b border-slate-800">
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-orange to-red-600 flex items-center justify-center">
+                 <span className="font-bold text-white text-xs">V</span>
+            </div>
+            <span className="font-display font-bold text-white">VOICEIT</span>
+        </div>
+        <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 text-white hover:text-neon-orange transition-colors"
+        >
+            <Menu />
+        </button>
+    </div>
 
     {/* Mobile Menu Overlay */}
     <AnimatePresence>
@@ -114,35 +139,44 @@ const Navbar: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-black/95 backdrop-blur-xl flex flex-col justify-center items-center gap-8 md:hidden"
+                className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col justify-center items-center"
             >
-                {/* Background Decor */}
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-neon-orange/10 blur-[100px] rounded-full"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-neon-red/10 blur-[100px] rounded-full"></div>
+                <button 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white"
+                >
+                    <X size={32} />
+                </button>
 
-                {navLinks.map((link, index) => (
+                <div className="flex flex-col gap-8 text-center">
+                    {navLinks.map((link, index) => (
+                        <motion.a 
+                            key={link.name} 
+                            href={link.href}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 * index }}
+                            onClick={(e) => scrollToSection(e, link.id)}
+                            className={cn(
+                                "text-4xl font-display font-black tracking-tight hover:text-neon-orange transition-colors",
+                                activeSection === link.id ? "text-neon-orange" : "text-white"
+                            )}
+                        >
+                            {link.name}
+                        </motion.a>
+                    ))}
+                    
                     <motion.a 
-                        key={link.name} 
-                        href={link.href}
+                        href="#join"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.1 * index }}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`text-4xl font-display font-black transition-colors ${activeSection === link.href.substring(1) ? 'text-neon-orange' : 'text-white hover:text-slate-300'}`}
+                        transition={{ delay: 0.4 }}
+                        onClick={(e) => scrollToSection(e, 'join')}
+                        className="mt-8 px-8 py-3 bg-neon-orange text-black font-bold text-xl rounded-full"
                     >
-                        {link.name}
+                        Join The Club
                     </motion.a>
-                ))}
-                <motion.a 
-                    href="#join"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-8 py-3 rounded-full bg-neon-orange text-black font-bold text-xl mt-8 shadow-[0_0_30px_rgba(255,87,34,0.5)] active:scale-95 transition-transform"
-                >
-                    Join Us
-                </motion.a>
+                </div>
             </motion.div>
         )}
     </AnimatePresence>

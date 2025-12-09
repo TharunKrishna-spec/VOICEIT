@@ -8,10 +8,77 @@ import { useAdmin } from '../context/AdminContext';
 import { getIcon } from '../lib/iconMap';
 import AdminModal from './ui/AdminModal';
 
+// Map tailwind text classes to Hex values for the 3D glow effects
+const HexColorMap: Record<string, string> = {
+  'text-neon-orange': '#FF5722',
+  'text-neon-red': '#FF3D00',
+  'text-neon-amber': '#FFC107',
+  'text-white': '#FFFFFF',
+  'text-orange-400': '#FB923C',
+  'text-yellow-200': '#FEF08A',
+  'text-red-400': '#F87171',
+  'text-blue-400': '#60A5FA',
+};
+
+const DeptIcon3D = ({ iconName, colorClass, isHovered }: { iconName: string, colorClass: string, isHovered: boolean }) => {
+    const Icon = getIcon(iconName);
+    const colorHex = HexColorMap[colorClass] || '#ffffff';
+    
+    return (
+        <div className="relative w-28 h-28 [perspective:1000px]">
+            <motion.div 
+                className="relative w-full h-full flex items-center justify-center [transform-style:preserve-3d]"
+                animate={{ 
+                    rotateX: isHovered ? 15 : 0, 
+                    rotateY: isHovered ? 15 : 0,
+                    scale: isHovered ? 1.1 : 1,
+                    z: isHovered ? 50 : 0
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+                {/* Layer 1: Base Shadow/Reflection */}
+                <div 
+                    className="absolute inset-2 rounded-2xl bg-slate-900/40 backdrop-blur-sm border border-white/5 [transform:translateZ(-10px)]"
+                    style={{ boxShadow: `0 20px 40px -10px rgba(0,0,0,0.8)` }}
+                />
+
+                {/* Layer 2: Colored Glow Volume */}
+                <div 
+                    className="absolute inset-0 rounded-3xl opacity-20 blur-xl transition-opacity duration-300"
+                    style={{ 
+                        backgroundColor: colorHex,
+                        opacity: isHovered ? 0.4 : 0.2,
+                        transform: 'translateZ(-5px)'
+                    }}
+                />
+
+                {/* Layer 3: Glass Surface */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 backdrop-blur-[2px] shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] [transform:translateZ(0px)] overflow-hidden">
+                    {/* Corner Highlight */}
+                    <div className="absolute -top-10 -left-10 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+                </div>
+
+                {/* Layer 4: The Icon (Floating) */}
+                <div className="relative z-10 [transform:translateZ(30px)]">
+                     <Icon 
+                        size={48} 
+                        color={colorHex} 
+                        className={`transition-all duration-300 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]`} 
+                        style={{ filter: isHovered ? `drop-shadow(0 0 15px ${colorHex})` : '' }}
+                     />
+                </div>
+                
+                {/* Layer 5: Top Specular Highlight */}
+                <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-white/40 to-transparent rounded-full blur-md [transform:translateZ(35px)] opacity-60"></div>
+            </motion.div>
+        </div>
+    );
+};
+
 const Departments: React.FC = () => {
   const { departments, user, updateDepartment } = useAdmin();
   const [activeDept, setActiveDept] = useState<Department | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
+  const [hoveredDeptId, setHoveredDeptId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Department>>({});
@@ -54,33 +121,33 @@ const Departments: React.FC = () => {
         <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-5xl font-display font-bold text-white">Departments</motion.h3>
       </div>
 
-      {/* MOBILE LAYOUT: Horizontal Carousel (No Rotation) */}
+      {/* MOBILE LAYOUT: Horizontal Carousel */}
       {isMobile ? (
-        <div className="flex overflow-x-auto gap-4 p-4 pb-12 snap-x snap-mandatory z-20 mt-4 no-scrollbar scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex overflow-x-auto gap-6 p-6 pb-12 snap-x snap-mandatory z-20 mt-4 no-scrollbar scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {departments.map((dept) => {
-                const Icon = getIcon(dept.icon);
                 return (
-                    <div key={dept.id} onClick={() => setActiveDept(dept)} className="relative min-w-[280px] w-[280px] snap-center bg-slate-900/80 border border-slate-800 p-8 rounded-2xl flex flex-col items-center text-center shadow-lg backdrop-blur-sm active:scale-95 transition-transform flex-shrink-0 group">
+                    <div key={dept.id} onClick={() => setActiveDept(dept)} className="relative min-w-[280px] w-[280px] snap-center bg-slate-900/40 border border-slate-800 p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-sm active:scale-95 transition-transform flex-shrink-0 group">
                         {user && <button onClick={(e) => handleEdit(dept, e)} className="absolute top-2 right-2 p-2 bg-blue-600 rounded-full text-white z-10"><Edit size={14}/></button>}
-                        <div className={`p-4 rounded-full bg-black mb-4 ${dept.color} border border-slate-800 shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300`}>
-                            <Icon size={32} />
+                        
+                        <div className="mb-6 scale-110">
+                            <DeptIcon3D iconName={dept.icon} colorClass={dept.color} isHovered={true} />
                         </div>
+
                         <h4 className="text-xl font-bold mb-2 text-white">{dept.name}</h4>
                         <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">{dept.description}</p>
                         <button className="mt-4 text-neon-orange text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">View Details <ArrowRight size={14} /></button>
                     </div>
                 );
             })}
-            {/* Spacer for better scrolling feel on right edge */}
             <div className="min-w-[20px] flex-shrink-0"></div>
         </div>
       ) : (
         /* DESKTOP LAYOUT: Flat Circular Orbit */
         <div className="relative h-[800px] w-full flex items-center justify-center -mt-24">
              {/* Center Core */}
-             <div className="absolute z-20 w-48 h-48 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-[0_0_80px_rgba(255,87,34,0.3)]">
+             <div className="absolute z-20 w-48 h-48 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-[0_0_80px_rgba(255,87,34,0.15)]">
                  <div className="absolute inset-0 rounded-full border border-neon-orange/20 animate-ping"></div>
-                 <div className="absolute inset-2 rounded-full border border-slate-600"></div>
+                 <div className="absolute inset-2 rounded-full border border-slate-600 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-black"></div>
                  
                  <div className="text-center z-10">
                     <span className="font-display font-bold text-xl tracking-[0.2em] text-slate-300">CORE</span>
@@ -98,12 +165,11 @@ const Departments: React.FC = () => {
                 className="absolute w-[520px] h-[520px] rounded-full"
                 style={{ 
                     animation: `spin 40s linear infinite`,
-                    animationPlayState: isHovering || activeDept ? 'paused' : 'running'
+                    animationPlayState: hoveredDeptId || activeDept ? 'paused' : 'running'
                 }}
              >
                 {departments.map((dept, index) => {
                     const angle = (index / departments.length) * 360;
-                    const Icon = getIcon(dept.icon);
                     
                     return (
                         <div
@@ -113,36 +179,33 @@ const Departments: React.FC = () => {
                                 transform: `rotate(${angle}deg) translate(${orbitRadius}px) rotate(-${angle}deg)`,
                             }}
                         >
-                             {/* Counter-rotation container to keep icons upright + Hover stop logic */}
+                             {/* Counter-rotation container */}
                              <div 
                                 className="w-full h-full flex items-center justify-center"
                                 style={{ 
                                     animation: `spin-reverse 40s linear infinite`,
-                                    animationPlayState: isHovering || activeDept ? 'paused' : 'running'
+                                    animationPlayState: hoveredDeptId || activeDept ? 'paused' : 'running'
                                 }}
                              >
-                                 <motion.button
-                                    whileHover={{ scale: 1.15 }}
-                                    onMouseEnter={() => setIsHovering(true)}
-                                    onMouseLeave={() => setIsHovering(false)}
+                                 <button
+                                    onMouseEnter={() => setHoveredDeptId(dept.id)}
+                                    onMouseLeave={() => setHoveredDeptId(null)}
                                     onClick={() => setActiveDept(dept)}
-                                    className={`
-                                        relative w-32 h-32 rounded-full 
-                                        bg-slate-900/90 backdrop-blur-md 
-                                        border-2 ${activeDept?.id === dept.id ? 'border-neon-orange bg-slate-800 scale-110 shadow-[0_0_40px_rgba(255,87,34,0.6)]' : 'border-slate-700 hover:border-neon-orange hover:shadow-[0_0_30px_rgba(255,87,34,0.5)]'}
-                                        flex flex-col items-center justify-center 
-                                        transition-all duration-300 z-30 group shadow-2xl
-                                    `}
+                                    className="relative z-30 group outline-none"
                                  >
-                                    <Icon className={`${dept.color} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]`} size={40} />
+                                    <DeptIcon3D 
+                                        iconName={dept.icon} 
+                                        colorClass={dept.color} 
+                                        isHovered={hoveredDeptId === dept.id} 
+                                    />
                                     
                                     {/* Name Label */}
-                                    <div className={`mt-3 text-xs font-bold text-white uppercase tracking-wider opacity-60 group-hover:opacity-100 transition-opacity`}>
+                                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 text-xs font-bold text-white uppercase tracking-wider transition-opacity duration-300 ${hoveredDeptId === dept.id ? 'opacity-100' : 'opacity-60'}`}>
                                         {dept.name.split(' ')[0]}
                                     </div>
 
                                     {/* Hover Description Tooltip */}
-                                    <div className="absolute top-full mt-4 w-48 p-4 bg-slate-950/95 border border-slate-700 rounded-xl text-center shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50">
+                                    <div className={`absolute top-full mt-8 w-48 p-4 bg-slate-950/95 border border-slate-700 rounded-xl text-center shadow-2xl transition-all duration-300 pointer-events-none z-50 left-1/2 -translate-x-1/2 ${hoveredDeptId === dept.id ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
                                         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-950 border-t border-l border-slate-700 rotate-45"></div>
                                         <p className="text-xs text-slate-300 leading-snug">{dept.description}</p>
                                     </div>
@@ -150,12 +213,12 @@ const Departments: React.FC = () => {
                                     {user && (
                                         <div 
                                             onClick={(e) => handleEdit(dept, e)} 
-                                            className="absolute -top-2 -right-2 bg-blue-600 p-1.5 rounded-full hover:bg-white hover:text-blue-600 transition-colors shadow-lg z-50"
+                                            className="absolute -top-4 -right-4 bg-blue-600 p-1.5 rounded-full hover:bg-white hover:text-blue-600 transition-colors shadow-lg z-50 pointer-events-auto"
                                         >
                                             <Edit size={12} fill="currentColor" />
                                         </div>
                                     )}
-                                 </motion.button>
+                                 </button>
                              </div>
                         </div>
                     );
@@ -185,10 +248,9 @@ const Departments: React.FC = () => {
                     {/* Left: Visual */}
                     <div className="w-full md:w-1/3 bg-gradient-to-br from-slate-900 to-black p-8 flex items-center justify-center relative overflow-hidden">
                         <div className={`absolute inset-0 opacity-20 bg-${activeDept.color.split('-')[1]}-500 blur-3xl`}></div>
-                        <div className="relative z-10 text-center">
-                            {React.createElement(getIcon(activeDept.icon), { size: 80, className: activeDept.color + " drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" })}
+                        <div className="relative z-10 text-center scale-125">
+                            <DeptIcon3D iconName={activeDept.icon} colorClass={activeDept.color} isHovered={true} />
                             <h2 className="text-3xl font-display font-black text-white mt-6">{activeDept.name}</h2>
-                            <div className="mt-2 inline-block px-3 py-1 rounded-full bg-slate-800 text-xs text-slate-400 uppercase tracking-widest font-bold">Department</div>
                         </div>
                     </div>
 

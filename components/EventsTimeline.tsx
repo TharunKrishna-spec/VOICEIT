@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import Section from './ui/Section';
-import { ArrowRight, Plus, Trash2, Edit } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Edit, Search, ArrowLeft, Calendar } from 'lucide-react';
 import { EventItem } from '../types';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useAdmin } from '../context/AdminContext';
 import { getIcon, IconMap } from '../lib/iconMap';
 import AdminModal from './ui/AdminModal';
@@ -54,7 +54,7 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEd
                     
                     {/* Admin Controls */}
                     {isAdmin && (
-                        <div className={`absolute top-2 ${isEven ? 'left-2' : 'right-2'} flex gap-2`}>
+                        <div className={`absolute top-2 ${isEven ? 'left-2' : 'right-2'} flex gap-2 z-20`}>
                             <button onClick={() => onEdit(event)} className="p-1 bg-blue-600 rounded text-white hover:bg-blue-500"><Edit size={14}/></button>
                             <button onClick={() => onDelete(event.id)} className="p-1 bg-red-600 rounded text-white hover:bg-red-500"><Trash2 size={14}/></button>
                         </div>
@@ -86,10 +86,91 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ event, index, isAdmin, onEd
   );
 };
 
+const ArchiveView = ({ events, onBack }: { events: EventItem[], onBack: () => void }) => {
+    const [filter, setFilter] = useState('');
+    
+    const filteredEvents = events.filter(e => 
+        e.title.toLowerCase().includes(filter.toLowerCase()) || 
+        e.year.includes(filter) ||
+        e.description.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    return (
+        <div className="container mx-auto px-4 relative z-10 min-h-screen">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={onBack}
+                        className="p-3 rounded-full bg-slate-900 border border-slate-800 hover:bg-neon-orange hover:text-black transition-all group"
+                    >
+                        <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform"/>
+                    </button>
+                    <div>
+                        <h2 className="text-3xl font-display font-bold text-white">Full Event Archive</h2>
+                        <p className="text-slate-400 text-sm">Explore our history from the very beginning.</p>
+                    </div>
+                </div>
+
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="Search events, years, or descriptions..." 
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="w-full bg-slate-900/50 border border-slate-800 rounded-full py-3 pl-12 pr-6 text-white focus:border-neon-orange outline-none transition-colors backdrop-blur-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+                {filteredEvents.map(event => {
+                    const Icon = getIcon(event.icon);
+                    return (
+                        <motion.div 
+                            key={event.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ y: -5 }}
+                            className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl hover:bg-slate-900 hover:border-neon-orange/30 transition-all duration-300 flex flex-col h-full group"
+                        >
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-neon-orange group-hover:scale-110 transition-transform">
+                                    <Icon size={24} />
+                                </div>
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                    {event.year}
+                                </span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-neon-orange transition-colors">{event.title}</h3>
+                            <p className="text-slate-400 text-sm line-clamp-4 mb-4 flex-grow leading-relaxed">{event.description}</p>
+                            
+                            <div className="pt-4 border-t border-slate-800/50 flex items-center text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-white transition-colors">
+                                <Calendar size={14} className="mr-2" /> Recorded Event
+                            </div>
+                        </motion.div>
+                    )
+                })}
+            </div>
+            
+            {filteredEvents.length === 0 && (
+                <div className="text-center py-20 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-slate-600 mb-4">
+                        <Search size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">No events found</h3>
+                    <p className="text-slate-500">Try adjusting your search query.</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const EventsTimeline: React.FC = () => {
     const { events, user, addEvent, deleteEvent, updateEvent } = useAdmin();
     const [isEditing, setIsEditing] = useState(false);
     const [currentEvent, setCurrentEvent] = useState<Partial<EventItem>>({});
+    const [showArchive, setShowArchive] = useState(false);
     
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
@@ -121,62 +202,87 @@ const EventsTimeline: React.FC = () => {
     };
 
   return (
-    <Section id="events" className="bg-black relative overflow-hidden py-32">
+    <Section id="events" className="bg-black relative overflow-hidden py-32 min-h-screen">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-neon-orange/5 blur-[120px] rounded-full pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-24 relative">
-            <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                className="text-neon-orange font-bold tracking-widest uppercase text-sm mb-3"
-            >
-                Milestones
-            </motion.h2>
-            <motion.h3 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl md:text-6xl font-display font-black text-white"
-            >
-                Our Journey
-            </motion.h3>
-
-            {user && (
-                <button onClick={handleAddNew} className="absolute top-0 right-0 flex items-center gap-2 bg-neon-orange text-black font-bold px-4 py-2 rounded-full hover:bg-white transition-colors">
-                    <Plus size={18} /> Add Event
-                </button>
-            )}
-        </div>
-
-        <div ref={containerRef} className="relative max-w-5xl mx-auto">
-            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-slate-800 -translate-x-1/2" />
+      <AnimatePresence mode="wait">
+        {!showArchive ? (
             <motion.div 
-                style={{ height }}
-                className="absolute left-6 md:left-1/2 top-0 w-0.5 bg-gradient-to-b from-neon-orange via-neon-red to-transparent -translate-x-1/2 shadow-[0_0_15px_rgba(255,87,34,0.8)] z-0 origin-top"
-            />
+                key="timeline"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="container mx-auto px-4 relative z-10"
+            >
+                <div className="text-center mb-24 relative">
+                    <motion.h2 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        className="text-neon-orange font-bold tracking-widest uppercase text-sm mb-3"
+                    >
+                        Milestones
+                    </motion.h2>
+                    <motion.h3 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl md:text-6xl font-display font-black text-white"
+                    >
+                        Our Journey
+                    </motion.h3>
 
-            <div className="relative z-10 py-10">
-                {events.map((event, index) => (
-                    <TimelineCard 
-                        key={event.id} 
-                        event={event} 
-                        index={index} 
-                        isAdmin={!!user}
-                        onEdit={handleEdit}
-                        onDelete={deleteEvent}
+                    {user && (
+                        <button onClick={handleAddNew} className="absolute top-0 right-0 flex items-center gap-2 bg-neon-orange text-black font-bold px-4 py-2 rounded-full hover:bg-white transition-colors">
+                            <Plus size={18} /> Add Event
+                        </button>
+                    )}
+                </div>
+
+                <div ref={containerRef} className="relative max-w-5xl mx-auto">
+                    <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-slate-800 -translate-x-1/2" />
+                    <motion.div 
+                        style={{ height }}
+                        className="absolute left-6 md:left-1/2 top-0 w-0.5 bg-gradient-to-b from-neon-orange via-neon-red to-transparent -translate-x-1/2 shadow-[0_0_15px_rgba(255,87,34,0.8)] z-0 origin-top"
                     />
-                ))}
-            </div>
 
-            <div className="flex justify-center mt-12">
-                <button className="group px-8 py-3 bg-slate-900 border border-slate-800 rounded-full text-white font-bold hover:bg-neon-orange hover:text-black hover:border-neon-orange transition-all duration-300 flex items-center gap-2">
-                    View Full Archive 
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-            </div>
-        </div>
-      </div>
+                    <div className="relative z-10 py-10">
+                        {events.slice(0, 5).map((event, index) => (
+                            <TimelineCard 
+                                key={event.id} 
+                                event={event} 
+                                index={index} 
+                                isAdmin={!!user}
+                                onEdit={handleEdit}
+                                onDelete={deleteEvent}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="flex justify-center mt-12">
+                        <button 
+                            onClick={() => setShowArchive(true)}
+                            className="group px-8 py-3 bg-slate-900 border border-slate-800 rounded-full text-white font-bold hover:bg-neon-orange hover:text-black hover:border-neon-orange transition-all duration-300 flex items-center gap-2"
+                        >
+                            View Full Archive 
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+        ) : (
+            <motion.div
+                key="archive"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-10"
+            >
+                <ArchiveView events={events} onBack={() => setShowArchive(false)} />
+            </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ADMIN MODAL */}
       <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title={currentEvent.id ? 'Edit Event' : 'Add New Event'}>
