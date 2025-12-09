@@ -42,6 +42,7 @@ interface AdminContextType {
   addLead: (lead: Omit<Lead, 'id'>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
   addPodcast: (podcast: Omit<Podcast, 'id'>) => Promise<void>;
+  updatePodcast: (id: string, data: Partial<Podcast>) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
   archiveBoard: (year: string) => Promise<void>;
   deletePastTenure: (id: string) => Promise<void>;
@@ -220,6 +221,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await addDoc(collection(db, 'podcasts'), podcast);
   };
 
+  const updatePodcast = async (id: string, data: Partial<Podcast>) => {
+    await updateDoc(doc(db, 'podcasts', id), data);
+  };
+
   const deletePodcast = async (id: string) => {
     await deleteDoc(doc(db, 'podcasts', id));
   };
@@ -275,7 +280,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addEvent, updateEvent, deleteEvent,
       addBoardMember, deleteBoardMember,
       addLead, deleteLead,
-      addPodcast, deletePodcast,
+      addPodcast, updatePodcast, deletePodcast,
       archiveBoard, deletePastTenure,
       archiveLeads, deletePastLeadTenure,
       addTestimonial, deleteTestimonial,
