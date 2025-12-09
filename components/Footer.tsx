@@ -5,6 +5,17 @@ import { useAdmin } from '../context/AdminContext';
 const Footer: React.FC = () => {
   const { user, openLoginModal, logout } = useAdmin();
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+        // Offset for the fixed navbar
+        const yOffset = -100; 
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="bg-black border-t border-slate-900 pt-16 pb-8">
       <div className="container mx-auto px-6">
@@ -25,10 +36,10 @@ const Footer: React.FC = () => {
             <div>
                 <h4 className="text-white font-bold mb-4">Quick Links</h4>
                 <ul className="space-y-2 text-slate-500">
-                    <li><a href="#about" className="hover:text-neon-orange transition-colors">About</a></li>
-                    <li><a href="#events" className="hover:text-neon-orange transition-colors">Events</a></li>
-                    <li><a href="#departments" className="hover:text-neon-orange transition-colors">Departments</a></li>
-                    <li><a href="#team" className="hover:text-neon-orange transition-colors">Team</a></li>
+                    <li><a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="hover:text-neon-orange transition-colors cursor-pointer">About</a></li>
+                    <li><a href="#events" onClick={(e) => scrollToSection(e, 'events')} className="hover:text-neon-orange transition-colors cursor-pointer">Events</a></li>
+                    <li><a href="#departments" onClick={(e) => scrollToSection(e, 'departments')} className="hover:text-neon-orange transition-colors cursor-pointer">Departments</a></li>
+                    <li><a href="#team" onClick={(e) => scrollToSection(e, 'team')} className="hover:text-neon-orange transition-colors cursor-pointer">Team</a></li>
                 </ul>
             </div>
 
