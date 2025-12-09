@@ -120,6 +120,17 @@ const Departments: React.FC = () => {
     setIsEditing(false);
   };
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    setActiveDept(null);
+    const element = document.getElementById(id);
+    if (element) {
+        const yOffset = -100; 
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   // Radius for the orbit
   const orbitRadius = 260;
 
@@ -142,21 +153,31 @@ const Departments: React.FC = () => {
         <div className="flex overflow-x-auto gap-6 p-6 pb-12 snap-x snap-mandatory z-20 mt-4 no-scrollbar scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {departments.map((dept) => {
                 return (
-                    <div key={dept.id} onClick={() => setActiveDept(dept)} className="relative min-w-[280px] w-[280px] snap-center bg-slate-900/40 border border-slate-800 p-8 rounded-3xl flex flex-col items-center text-center backdrop-blur-sm active:scale-95 transition-transform flex-shrink-0 group">
-                        {user && <button onClick={(e) => handleEdit(dept, e)} className="absolute top-2 right-2 p-2 bg-blue-600 rounded-full text-white z-10"><Edit size={14}/></button>}
+                    <div key={dept.id} onClick={() => setActiveDept(dept)} className="relative min-w-[260px] w-[260px] snap-center bg-slate-900/40 border border-slate-800 p-6 rounded-3xl flex flex-col items-center text-center backdrop-blur-sm active:scale-95 transition-transform flex-shrink-0 group shadow-lg hover:shadow-neon-orange/10 cursor-pointer">
+                        {user && <button onClick={(e) => handleEdit(dept, e)} className="absolute top-2 right-2 p-2 bg-blue-600 rounded-full text-white z-10 hover:bg-blue-500 transition-colors"><Edit size={14}/></button>}
                         
-                        <div className="mb-6 scale-110">
+                        <div className="mb-4 w-24 h-24 flex items-center justify-center">
                             <DeptIcon3D 
                                 iconName={dept.icon} 
                                 colorClass={dept.color} 
                                 isHovered={true}
                                 layoutId={`dept-icon-${dept.id}`}
+                                className="w-full h-full"
                             />
                         </div>
 
                         <h4 className="text-xl font-bold mb-2 text-white">{dept.name}</h4>
-                        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">{dept.description}</p>
-                        <button className="mt-4 text-neon-orange text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">View Details <ArrowRight size={14} /></button>
+                        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 h-[60px] overflow-hidden">{dept.description}</p>
+                        
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDept(dept);
+                            }}
+                            className="mt-5 px-4 py-2 bg-slate-800/50 rounded-full text-neon-orange text-xs font-bold flex items-center gap-1 group-hover:bg-neon-orange group-hover:text-black transition-all"
+                        >
+                            View Department <ArrowRight size={12} />
+                        </button>
                     </div>
                 );
             })}
@@ -229,7 +250,10 @@ const Departments: React.FC = () => {
                                     {/* Hover Description Tooltip */}
                                     <div className={`absolute top-full mt-8 w-48 p-4 bg-slate-950/95 border border-slate-700 rounded-xl text-center shadow-2xl transition-all duration-300 pointer-events-none z-50 left-1/2 -translate-x-1/2 ${hoveredDeptId === dept.id ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
                                         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-950 border-t border-l border-slate-700 rotate-45"></div>
-                                        <p className="text-xs text-slate-300 leading-snug">{dept.description}</p>
+                                        <p className="text-xs text-slate-300 leading-snug mb-2">{dept.description}</p>
+                                        <div className="pt-2 border-t border-slate-800 flex items-center justify-center text-neon-orange text-[10px] font-bold uppercase tracking-wider gap-1">
+                                            View Department <ArrowRight size={10} />
+                                        </div>
                                     </div>
 
                                     {user && (
@@ -316,7 +340,11 @@ const Departments: React.FC = () => {
                             </li>
                         </ul>
 
-                        <a href="#join" onClick={() => setActiveDept(null)} className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-neon-orange transition-colors">
+                        <a 
+                            href="#join" 
+                            onClick={(e) => scrollToSection(e, 'join')} 
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-neon-orange transition-colors"
+                        >
                             Apply for {activeDept.name} <ArrowRight size={18} />
                         </a>
                     </div>
@@ -328,8 +356,21 @@ const Departments: React.FC = () => {
       <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Edit Department">
           <form onSubmit={handleSave} className="space-y-4">
               <div>
+                  <label className="block text-slate-400 text-sm mb-1">Department Name</label>
+                  <input 
+                    type="text" 
+                    value={editForm.name || ''} 
+                    onChange={e => setEditForm({...editForm, name: e.target.value})} 
+                    className="w-full bg-black border border-slate-700 p-2 rounded text-white" 
+                  />
+              </div>
+              <div>
                   <label className="block text-slate-400 text-sm mb-1">Description</label>
-                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-32" />
+                  <textarea 
+                    value={editForm.description || ''} 
+                    onChange={e => setEditForm({...editForm, description: e.target.value})} 
+                    className="w-full bg-black border border-slate-700 p-2 rounded text-white h-32" 
+                  />
               </div>
               <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Save Changes</button>
           </form>
