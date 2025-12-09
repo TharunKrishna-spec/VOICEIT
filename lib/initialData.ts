@@ -1,5 +1,5 @@
 
-import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData } from "../types";
+import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, PrivacyData } from "../types";
 
 // PASTE YOUR BASE64 IMAGE STRING INSIDE THE QUOTES BELOW
 export const LOGO_IMAGE = ""; 
@@ -9,6 +9,34 @@ export const initialHero: HeroData = {
   subtitle_p1: "Feel the",
   subtitle_highlight: "rhythm.",
   description: "The Official Radio & Podcasting Club of VIT Chennai. Amplifying stories, one frequency at a time."
+};
+
+export const initialPrivacy: PrivacyData = {
+  lastUpdated: "October 24, 2024",
+  content: `1. Introduction
+Welcome to VoiceIt VIT Chennai. We value your privacy and are committed to protecting your personal data. This privacy policy explains how we handle information when you visit our website or interact with our club activities.
+
+2. Information We Collect
+We may collect the following types of information:
+- Recruitment Data: Name, registration number, phone number, and email address when you apply for club recruitment via our forms.
+- Usage Data: Information about how you use our website, including access times and pages viewed (via basic analytics).
+
+3. How We Use Your Information
+- To manage club recruitments and auditions.
+- To communicate with you regarding events, workshops, and club updates.
+- To improve the performance and user experience of our website.
+
+4. Data Sharing
+We do not sell, trade, or rent your personal identification information to others. Data is strictly used for internal club administration and is accessible only to the current Board Members and Faculty Coordinators of VoiceIt.
+
+5. Third-Party Links
+Our website may contain links to third-party websites (e.g., Spotify, Instagram, YouTube). We are not responsible for the privacy practices or content of these external sites.
+
+6. Changes to This Policy
+VoiceIt reserves the right to update this privacy policy at any time. We encourage users to check this page frequently for any changes.
+
+7. Contact Us
+If you have any questions about this Privacy Policy, please contact us via our social media handles or email.`
 };
 
 export const initialAbout: AboutData = {

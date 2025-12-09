@@ -4,11 +4,13 @@ import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit } from 'lucide-rea
 import { useAdmin } from '../context/AdminContext';
 import { LOGO_IMAGE } from '../lib/initialData';
 import AdminModal from './ui/AdminModal';
+import PrivacyModal from './PrivacyModal';
 import { SocialLinks } from '../types';
 
 const Footer: React.FC = () => {
   const { user, openLoginModal, logout, socialLinks, updateSocialLinks } = useAdmin();
   const [isEditing, setIsEditing] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [editForm, setEditForm] = useState<SocialLinks>(socialLinks);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -92,7 +94,12 @@ const Footer: React.FC = () => {
         <div className="border-t border-slate-900 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-600">
             <p>&copy; 2024 VoiceIt VIT Chennai. All rights reserved.</p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
-                <a href="#" className="hover:text-slate-400">Privacy Policy</a>
+                <button 
+                    onClick={() => setIsPrivacyOpen(true)}
+                    className="hover:text-slate-400 transition-colors"
+                >
+                    Privacy Policy
+                </button>
                 
                 {user ? (
                    <button onClick={logout} className="flex items-center gap-2 text-neon-orange hover:text-white transition-colors font-bold">
@@ -106,6 +113,8 @@ const Footer: React.FC = () => {
             </div>
         </div>
       </div>
+
+      <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
 
       {/* Admin Modal for Social Links */}
       <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Manage Social Links">
