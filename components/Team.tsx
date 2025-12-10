@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Section from './ui/Section';
 import { BoardMember } from '../types';
@@ -120,7 +119,7 @@ const Team: React.FC = () => {
               <div className="space-y-2">
                   {pastTenures.length === 0 && <p className="text-slate-500 text-center py-4">No past records found.</p>}
                   
-                  {pastTenures.sort((a,b) => b.year.localeCompare(a.year)).map((tenure) => (
+                  {pastTenures.map((tenure) => (
                       <div key={tenure.id} className="border border-slate-800 rounded-xl bg-slate-900/50 overflow-hidden">
                           <div 
                               onClick={() => toggleTenure(tenure.id)}

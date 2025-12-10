@@ -98,8 +98,3 @@ export interface SocialLinks {
   youtube: string;
   linkedin: string;
 }
-
-export interface PrivacyData {
-  content: string;
-  lastUpdated: string;
-}

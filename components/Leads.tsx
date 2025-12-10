@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Section from './ui/Section';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,7 +100,7 @@ const Leads: React.FC = () => {
               <div className="space-y-2">
                   {pastLeadTenures.length === 0 && <p className="text-slate-500 text-center py-4">No past records found.</p>}
                   
-                  {pastLeadTenures.sort((a,b) => b.year.localeCompare(a.year)).map((tenure) => (
+                  {pastLeadTenures.map((tenure) => (
                       <div key={tenure.id} className="border border-slate-800 rounded-xl bg-slate-900/50 overflow-hidden">
                           <div 
                               onClick={() => toggleTenure(tenure.id)}

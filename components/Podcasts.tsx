@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import Section from './ui/Section';
 import { motion } from 'framer-motion';
-import { Play, Clock, Plus, Trash2, ExternalLink, Edit } from 'lucide-react';
+import { Play, Clock, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { Podcast } from '../types';
 import AdminModal from './ui/AdminModal';
@@ -14,31 +13,16 @@ const SpotifyIcon = ({ className }: { className?: string }) => (
 );
 
 const Podcasts: React.FC = () => {
-  const { podcasts, user, addPodcast, updatePodcast, deletePodcast } = useAdmin();
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentPodcast, setCurrentPodcast] = useState<Partial<Podcast>>({ title: '', host: '', duration: '', image: '', link: '' });
+  const { podcasts, user, addPodcast, deletePodcast } = useAdmin();
+  const [isAdding, setIsAdding] = useState(false);
+  const [newPodcast, setNewPodcast] = useState<Partial<Podcast>>({ title: '', host: '', duration: '', image: '', link: '' });
 
-  const handleAddNew = () => {
-    setCurrentPodcast({ title: '', host: '', duration: '', image: '', link: '' });
-    setIsEditing(true);
-  };
-
-  const handleEdit = (podcast: Podcast) => {
-    setCurrentPodcast(podcast);
-    setIsEditing(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentPodcast.id) {
-        // Update existing
-        await updatePodcast(currentPodcast.id, currentPodcast);
-    } else {
-        // Add new
-        // @ts-ignore
-        await addPodcast(currentPodcast);
-    }
-    setIsEditing(false);
+    // @ts-ignore
+    await addPodcast(newPodcast);
+    setIsAdding(false);
+    setNewPodcast({ title: '', host: '', duration: '', image: '', link: '' });
   };
 
   const openLink = (url?: string) => {
@@ -59,7 +43,7 @@ const Podcasts: React.FC = () => {
                 Visit Spotify <ExternalLink size={14} />
             </a>
             {user && (
-                <button onClick={handleAddNew} className="bg-neon-orange text-black px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-white transition-colors">
+                <button onClick={() => setIsAdding(true)} className="bg-neon-orange text-black px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-white transition-colors">
                     <Plus size={16} /> Add
                 </button>
             )}
@@ -88,22 +72,14 @@ const Podcasts: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Admin Controls */}
+                    {/* Admin Delete */}
                     {user && (
-                        <div className="absolute top-2 right-2 flex gap-1 z-20">
-                             <button 
-                                onClick={(e) => { e.stopPropagation(); handleEdit(podcast); }} 
-                                className="p-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-500 shadow-md"
-                            >
-                                <Edit size={12} />
-                            </button>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); deletePodcast(podcast.id); }} 
-                                className="p-1.5 bg-red-600 text-white rounded-full hover:bg-red-500 shadow-md"
-                            >
-                                <Trash2 size={12} />
-                            </button>
-                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); deletePodcast(podcast.id); }} 
+                            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full z-20 hover:bg-red-500 shadow-md"
+                        >
+                            <Trash2 size={12} />
+                        </button>
                     )}
                 </div>
 
@@ -121,16 +97,14 @@ const Podcasts: React.FC = () => {
         ))}
       </div>
 
-      <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title={currentPodcast.id ? "Edit Podcast" : "Add Podcast Episode"}>
-          <form onSubmit={handleSave} className="space-y-4">
-              <input required placeholder="Episode Title" value={currentPodcast.title} onChange={e => setCurrentPodcast({...currentPodcast, title: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Host Name" value={currentPodcast.host} onChange={e => setCurrentPodcast({...currentPodcast, host: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Duration (e.g. 24m)" value={currentPodcast.duration} onChange={e => setCurrentPodcast({...currentPodcast, duration: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Cover Image URL" value={currentPodcast.image} onChange={e => setCurrentPodcast({...currentPodcast, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input placeholder="Spotify Link (Optional)" value={currentPodcast.link || ''} onChange={e => setCurrentPodcast({...currentPodcast, link: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <button type="submit" className="w-full py-2 bg-[#1DB954] text-black font-bold rounded hover:bg-white transition-colors">
-                  {currentPodcast.id ? "Save Changes" : "Add Podcast"}
-              </button>
+      <AdminModal isOpen={isAdding} onClose={() => setIsAdding(false)} title="Add Podcast Episode">
+          <form onSubmit={handleAdd} className="space-y-4">
+              <input required placeholder="Episode Title" value={newPodcast.title} onChange={e => setNewPodcast({...newPodcast, title: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Host Name" value={newPodcast.host} onChange={e => setNewPodcast({...newPodcast, host: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Duration (e.g. 24m)" value={newPodcast.duration} onChange={e => setNewPodcast({...newPodcast, duration: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Cover Image URL" value={newPodcast.image} onChange={e => setNewPodcast({...newPodcast, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input placeholder="Spotify Link (Optional)" value={newPodcast.link || ''} onChange={e => setNewPodcast({...newPodcast, link: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <button type="submit" className="w-full py-2 bg-[#1DB954] text-black font-bold rounded hover:bg-white transition-colors">Add Podcast</button>
           </form>
       </AdminModal>
     </Section>

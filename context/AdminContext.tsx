@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData, PrivacyData } from '../types';
-import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout, initialPrivacy } from '../lib/initialData';
+import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData } from '../types';
+import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout } from '../lib/initialData';
 import { auth, db } from '../lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, addDoc, getDoc } from 'firebase/firestore';
@@ -26,7 +26,6 @@ interface AdminContextType {
   testimonials: Testimonial[];
   recruitment: RecruitmentData;
   socialLinks: SocialLinks;
-  privacyData: PrivacyData;
   isLoginOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
@@ -43,7 +42,6 @@ interface AdminContextType {
   addLead: (lead: Omit<Lead, 'id'>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
   addPodcast: (podcast: Omit<Podcast, 'id'>) => Promise<void>;
-  updatePodcast: (id: string, data: Partial<Podcast>) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
   archiveBoard: (year: string) => Promise<void>;
   deletePastTenure: (id: string) => Promise<void>;
@@ -53,7 +51,6 @@ interface AdminContextType {
   deleteTestimonial: (id: string) => Promise<void>;
   updateRecruitment: (data: RecruitmentData) => Promise<void>;
   updateSocialLinks: (data: SocialLinks) => Promise<void>;
-  updatePrivacy: (data: PrivacyData) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -82,7 +79,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
   const [recruitment, setRecruitment] = useState<RecruitmentData>(initialRecruitment);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>(initialSocialLinks);
-  const [privacyData, setPrivacyData] = useState<PrivacyData>(initialPrivacy);
 
   // --- AUTH LISTENER ---
   useEffect(() => {
@@ -140,7 +136,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         subscribeToDoc('about', setAboutData, initialAbout),
         subscribeToDoc('recruitment', setRecruitment, initialRecruitment),
         subscribeToDoc('social', setSocialLinks, initialSocialLinks),
-        subscribeToDoc('privacy', setPrivacyData, initialPrivacy),
         
         subscribeToCollection('departments', setDepartments, initialDepartments),
         subscribeToCollection('events', setEvents, initialEvents),
@@ -225,10 +220,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await addDoc(collection(db, 'podcasts'), podcast);
   };
 
-  const updatePodcast = async (id: string, data: Partial<Podcast>) => {
-    await updateDoc(doc(db, 'podcasts', id), data);
-  };
-
   const deletePodcast = async (id: string) => {
     await deleteDoc(doc(db, 'podcasts', id));
   };
@@ -275,25 +266,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await setDoc(doc(db, 'content', 'social'), data);
   };
 
-  const updatePrivacy = async (data: PrivacyData) => {
-    setPrivacyData(data);
-    await setDoc(doc(db, 'content', 'privacy'), data);
-  };
-
   return (
     <AdminContext.Provider value={{
-      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks, privacyData,
+      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks,
       isLoginOpen, openLoginModal: () => setIsLoginOpen(true), closeLoginModal: () => setIsLoginOpen(false),
       login, logout,
       updateHero, updateAbout, updateDepartment,
       addEvent, updateEvent, deleteEvent,
       addBoardMember, deleteBoardMember,
       addLead, deleteLead,
-      addPodcast, updatePodcast, deletePodcast,
+      addPodcast, deletePodcast,
       archiveBoard, deletePastTenure,
       archiveLeads, deletePastLeadTenure,
       addTestimonial, deleteTestimonial,
-      updateRecruitment, updateSocialLinks, updatePrivacy
+      updateRecruitment, updateSocialLinks
     }}>
       {children}
     </AdminContext.Provider>
