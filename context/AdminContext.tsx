@@ -171,29 +171,67 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // --- DATA ACTIONS ---
+  // We sanitize inputs here to ensure no circular references (like Events or DOM nodes) reach Firestore.
 
   const updateHero = async (data: Partial<HeroData>) => {
-    const newData = { ...heroData, ...data };
-    // Optimistic update
+    const cleanData = {
+      title: data.title || '',
+      subtitle_p1: data.subtitle_p1 || '',
+      subtitle_highlight: data.subtitle_highlight || '',
+      description: data.description || ''
+    };
+    const newData = { ...heroData, ...cleanData };
     setHeroData(newData);
     await setDoc(doc(db, 'content', 'hero'), newData, { merge: true });
   };
 
   const updateAbout = async (data: AboutData) => {
-    setAboutData(data);
-    await setDoc(doc(db, 'content', 'about'), data);
+    // Deep sanitize needed for nested arrays if they come from mixed sources, but typically safe if typed.
+    // Ensure we don't pass the state object itself if it has extra props.
+    const cleanData: AboutData = {
+        sectionTitle: data.sectionTitle || '',
+        mainTitle: data.mainTitle || '',
+        description: data.description || '',
+        features: data.features.map(f => ({ id: f.id, title: f.title, text: f.text, icon: f.icon })),
+        images: [...data.images]
+    };
+    setAboutData(cleanData);
+    await setDoc(doc(db, 'content', 'about'), cleanData);
   };
 
   const updateDepartment = async (id: string, data: Partial<Department>) => {
-    await updateDoc(doc(db, 'departments', id), data);
+    // Only allow specific fields
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.icon !== undefined) payload.icon = data.icon;
+    if (data.color !== undefined) payload.color = data.color;
+    
+    await updateDoc(doc(db, 'departments', id), payload);
   };
 
   const addEvent = async (event: Omit<EventItem, 'id'>) => {
-    await addDoc(collection(db, 'events'), event);
+    const cleanEvent = {
+        title: event.title || '',
+        year: event.year || '',
+        icon: event.icon || 'Mic',
+        description: event.description || '',
+        image: event.image || '',
+        longDescription: event.longDescription || ''
+    };
+    await addDoc(collection(db, 'events'), cleanEvent);
   };
 
   const updateEvent = async (id: string, data: Partial<EventItem>) => {
-    await updateDoc(doc(db, 'events', id), data);
+    const payload: any = {};
+    if (data.title !== undefined) payload.title = data.title;
+    if (data.year !== undefined) payload.year = data.year;
+    if (data.icon !== undefined) payload.icon = data.icon;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.image !== undefined) payload.image = data.image;
+    if (data.longDescription !== undefined) payload.longDescription = data.longDescription;
+    
+    await updateDoc(doc(db, 'events', id), payload);
   };
 
   const deleteEvent = async (id: string) => {
@@ -201,7 +239,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addBoardMember = async (member: Omit<BoardMember, 'id'>) => {
-    await addDoc(collection(db, 'boardMembers'), member);
+    const cleanMember = {
+        name: member.name || '',
+        role: member.role || '',
+        image: member.image || ''
+    };
+    await addDoc(collection(db, 'boardMembers'), cleanMember);
   };
 
   const deleteBoardMember = async (id: string) => {
@@ -209,7 +252,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addLead = async (lead: Omit<Lead, 'id'>) => {
-    await addDoc(collection(db, 'leads'), lead);
+    const cleanLead = {
+        name: lead.name || '',
+        designation: lead.designation || '',
+        department: lead.department || '',
+        image: lead.image || '',
+        quote: lead.quote || ''
+    };
+    await addDoc(collection(db, 'leads'), cleanLead);
   };
 
   const deleteLead = async (id: string) => {
@@ -217,7 +267,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addPodcast = async (podcast: Omit<Podcast, 'id'>) => {
-    await addDoc(collection(db, 'podcasts'), podcast);
+    const cleanPodcast = {
+        title: podcast.title || '',
+        host: podcast.host || '',
+        duration: podcast.duration || '',
+        image: podcast.image || '',
+        link: podcast.link || ''
+    };
+    await addDoc(collection(db, 'podcasts'), cleanPodcast);
   };
 
   const deletePodcast = async (id: string) => {
@@ -225,9 +282,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const archiveBoard = async (year: string) => {
+    // Deep clone members to strip any non-serializable properties
+    const cleanMembers = boardMembers.map(m => ({
+        id: m.id,
+        name: m.name,
+        role: m.role,
+        image: m.image
+    }));
+    
     const newTenure = {
         year: year,
-        members: [...boardMembers]
+        members: cleanMembers
     };
     await addDoc(collection(db, 'pastTenures'), newTenure);
   };
@@ -237,9 +302,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const archiveLeads = async (year: string) => {
+     const cleanLeads = leads.map(l => ({
+         id: l.id,
+         name: l.name,
+         designation: l.designation,
+         department: l.department,
+         image: l.image,
+         quote: l.quote || ''
+     }));
+
      const newTenure = {
         year: year,
-        leads: [...leads]
+        leads: cleanLeads
     };
     await addDoc(collection(db, 'pastLeadTenures'), newTenure);
   };
@@ -249,7 +323,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addTestimonial = async (testimonial: Omit<Testimonial, 'id'>) => {
-    await addDoc(collection(db, 'testimonials'), testimonial);
+    const cleanTestimonial = {
+        quote: testimonial.quote || '',
+        name: testimonial.name || '',
+        designation: testimonial.designation || '',
+        src: testimonial.src || ''
+    };
+    await addDoc(collection(db, 'testimonials'), cleanTestimonial);
   };
 
   const deleteTestimonial = async (id: string) => {
@@ -257,13 +337,22 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateRecruitment = async (data: RecruitmentData) => {
-    setRecruitment(data);
-    await setDoc(doc(db, 'content', 'recruitment'), data);
+    const cleanData = {
+        isOpen: !!data.isOpen,
+        link: data.link || ''
+    };
+    setRecruitment(cleanData);
+    await setDoc(doc(db, 'content', 'recruitment'), cleanData);
   };
 
   const updateSocialLinks = async (data: SocialLinks) => {
-    setSocialLinks(data);
-    await setDoc(doc(db, 'content', 'social'), data);
+    const cleanData = {
+        instagram: data.instagram || '',
+        youtube: data.youtube || '',
+        linkedin: data.linkedin || ''
+    };
+    setSocialLinks(cleanData);
+    await setDoc(doc(db, 'content', 'social'), cleanData);
   };
 
   return (
