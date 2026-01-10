@@ -1,6 +1,9 @@
+
 import React, { useState } from 'react';
 import Section from './ui/Section';
-import { motion, AnimatePresence } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion, AnimatePresence } from 'framer-motion';
+const motion = _motion as any;
 import { useAdmin } from '../context/AdminContext';
 import { Plus, History, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import AdminModal from './ui/AdminModal';

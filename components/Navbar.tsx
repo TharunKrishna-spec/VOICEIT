@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion, AnimatePresence } from 'framer-motion';
+const motion = _motion as any;
 import { cn } from '../lib/utils';
 import { LOGO_IMAGE } from '../lib/initialData';
 

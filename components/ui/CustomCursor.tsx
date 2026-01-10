@@ -1,5 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion } from 'framer-motion';
+const motion = _motion as any;
 
 const CustomCursor: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });

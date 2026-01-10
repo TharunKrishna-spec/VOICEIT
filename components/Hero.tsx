@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import { Play, Edit } from 'lucide-react';
-import { motion } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion } from 'framer-motion';
+const motion = _motion as any;
 import { useAdmin } from '../context/AdminContext';
 import AdminModal from './ui/AdminModal';
 import { RadioJockey3D } from './ui/RadioJockey3D';
@@ -183,4 +185,3 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
-    

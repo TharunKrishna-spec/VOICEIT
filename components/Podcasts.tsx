@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import Section from './ui/Section';
-import { motion } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion } from 'framer-motion';
+const motion = _motion as any;
 import { Play, Clock, Plus, Trash2, ExternalLink, Edit } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { Podcast } from '../types';

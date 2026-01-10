@@ -3,7 +3,9 @@ import React, { useRef, useState } from 'react';
 import Section from './ui/Section';
 import { ArrowRight, Plus, Trash2, Edit, Search, ArrowLeft, Calendar, X, MapPin } from 'lucide-react';
 import { EventItem } from '../types';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+const motion = _motion as any;
 import { useAdmin } from '../context/AdminContext';
 import { getIcon, IconMap } from '../lib/iconMap';
 import AdminModal from './ui/AdminModal';

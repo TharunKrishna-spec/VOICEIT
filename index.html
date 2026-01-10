@@ -27,8 +27,8 @@
             },
             animation: {
               'blob': 'blob 7s infinite',
-              'spin-slow': 'spin 60s linear infinite',
-              'spin-reverse-slow': 'spin-reverse 60s linear infinite',
+              'spin-slow': 'orbit-spin 60s linear infinite',
+              'spin-reverse-slow': 'orbit-spin-reverse 60s linear infinite',
               'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             },
             keyframes: {
@@ -38,7 +38,11 @@
                 '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                 '100%': { transform: 'translate(0px, 0px) scale(1)' },
               },
-              'spin-reverse': {
+              'orbit-spin': {
+                'from': { transform: 'rotate(0deg)' },
+                'to': { transform: 'rotate(360deg)' },
+              },
+              'orbit-spin-reverse': {
                 'from': { transform: 'rotate(0deg)' },
                 'to': { transform: 'rotate(-360deg)' },
               }
@@ -69,6 +73,24 @@
       }
       .perspective-1000 {
         perspective: 1000px;
+      }
+      /* Ensure orbit animations are globally available even if Tailwind is still loading */
+      @keyframes orbit-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes orbit-spin-reverse {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(-360deg); }
+      }
+      .animate-orbit {
+        animation: orbit-spin 40s linear infinite;
+      }
+      .animate-orbit-reverse {
+        animation: orbit-spin-reverse 40s linear infinite;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
       }
     </style>
   <script type="importmap">

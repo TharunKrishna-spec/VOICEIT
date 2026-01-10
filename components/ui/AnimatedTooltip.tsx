@@ -1,11 +1,14 @@
+
 import React, { useState } from "react";
+// Fix: Systemic type issues with framer-motion in this environment
 import {
-  motion,
+  motion as _motion,
   useTransform,
   AnimatePresence,
   useMotionValue,
   useSpring,
 } from "framer-motion";
+const motion = _motion as any;
 import { cn } from "../../lib/utils";
 
 export const AnimatedTooltip = ({

@@ -1,5 +1,8 @@
+
 import React from 'react';
-import { motion } from 'framer-motion';
+// Fix: Systemic type issues with framer-motion in this environment
+import { motion as _motion } from 'framer-motion';
+const motion = _motion as any;
 
 export const RadioJockey3D = ({ className }: { className?: string }) => {
   return (
