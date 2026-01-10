@@ -87,12 +87,15 @@ const DeptIcon3D = ({
 };
 
 const Departments: React.FC = () => {
-  const { departments, user, updateDepartment } = useAdmin();
+  const { departments, user, updateDepartment, siteConfig } = useAdmin();
   const [activeDept, setActiveDept] = useState<Department | null>(null);
   const [hoveredDeptId, setHoveredDeptId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Department>>({});
+
+  // Prefers siteConfig logo from DB, falls back to initialData
+  const activeLogo = siteConfig.logo || LOGO_IMAGE;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -128,7 +131,6 @@ const Departments: React.FC = () => {
 
   const orbitRadius = 260;
 
-  // Final safety check to prevent NaN calculations
   if (!departments || departments.length === 0) return null;
 
   return (
@@ -184,9 +186,9 @@ const Departments: React.FC = () => {
                  <div className="absolute inset-0 rounded-full border border-neon-orange/20 animate-ping"></div>
                  <div className="absolute inset-2 rounded-full border border-slate-600 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-black"></div>
                  
-                 <div className="z-10 relative w-full h-full flex items-center justify-center rounded-full overflow-hidden">
-                    {LOGO_IMAGE ? (
-                        <img src={LOGO_IMAGE} alt="Core" className="w-full h-full object-cover" />
+                 <div className="z-10 relative w-full h-full flex items-center justify-center rounded-full overflow-hidden bg-slate-950">
+                    {activeLogo ? (
+                        <img src={activeLogo} alt="Core" className="w-full h-full object-cover" />
                     ) : (
                         <div className="flex flex-col items-center justify-center text-slate-500/50 w-full h-full relative">
                             <motion.div

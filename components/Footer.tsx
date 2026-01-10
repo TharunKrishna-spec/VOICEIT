@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { LOGO_IMAGE } from '../lib/initialData';
 import AdminModal from './ui/AdminModal';
@@ -13,11 +13,13 @@ const Footer: React.FC = () => {
   const [socialEditForm, setSocialEditForm] = useState<SocialLinks>(socialLinks);
   const [configEditForm, setConfigEditForm] = useState<SiteConfig>(siteConfig);
 
+  // Prefers siteConfig logo from DB, falls back to initialData
+  const activeLogo = siteConfig.logo || LOGO_IMAGE;
+
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-        // Offset for the fixed navbar
         const yOffset = -100; 
         const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: 'smooth' });
@@ -52,9 +54,9 @@ const Footer: React.FC = () => {
         <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                     <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden flex items-center justify-center">
-                        {LOGO_IMAGE ? (
-                            <img src={LOGO_IMAGE} alt="VoiceIt Logo" className="w-full h-full object-cover" />
+                     <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden flex items-center justify-center bg-slate-900">
+                        {activeLogo ? (
+                            <img src={activeLogo} alt="VoiceIt Logo" className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full bg-neon-orange flex items-center justify-center">
                                 <span className="font-bold text-black text-sm">V</span>
@@ -165,38 +167,65 @@ const Footer: React.FC = () => {
           </form>
       </AdminModal>
 
-      {/* Admin Modal for Site Config (Marquee Toggle) */}
+      {/* Admin Modal for Site Config (Marquee & Logo) */}
       <AdminModal isOpen={isEditingConfig} onClose={() => setIsEditingConfig(false)} title="Site Global Settings">
           <form onSubmit={handleSaveConfig} className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-black border border-slate-700 rounded-xl">
-                  <div>
-                      <h4 className="text-white font-bold">Announcement Marquee</h4>
-                      <p className="text-xs text-slate-500">Enable/disable the scrolling ticker at the top.</p>
+              
+              {/* Logo Management */}
+              <div className="space-y-4 pb-6 border-b border-slate-800">
+                  <h4 className="text-white font-bold flex items-center gap-2"><ImageIcon size={18} className="text-neon-orange" /> Brand Logo</h4>
+                  <div className="flex gap-4 items-start">
+                      <div className="w-20 h-20 rounded-xl bg-black border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {configEditForm.logo ? (
+                              <img src={configEditForm.logo} alt="Logo Preview" className="w-full h-full object-cover" />
+                          ) : (
+                              <div className="text-slate-600 text-[10px] text-center p-1 uppercase font-bold">No Custom Logo</div>
+                          )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                          <label className="block text-slate-400 text-xs uppercase font-bold tracking-widest">Logo Base64 String / URL</label>
+                          <textarea 
+                              value={configEditForm.logo || ''} 
+                              onChange={e => setConfigEditForm({...configEditForm, logo: e.target.value})} 
+                              className="w-full bg-black border border-slate-700 p-2 rounded text-white text-[10px] h-16 font-mono"
+                              placeholder="Paste your data:image/png;base64,... string here"
+                          />
+                      </div>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={() => setConfigEditForm({...configEditForm, showMarquee: !configEditForm.showMarquee})}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all ${configEditForm.showMarquee ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]' : 'bg-red-600 text-white opacity-60'}`}
-                  >
-                      {configEditForm.showMarquee ? <><CheckCircle size={16}/> Active</> : <><XCircle size={16}/> Disabled</>}
-                  </button>
+                  <p className="text-[10px] text-slate-500 italic leading-tight">Paste your club's square logo here. Transparent background recommended.</p>
               </div>
 
-              {configEditForm.showMarquee && (
-                <div className="space-y-2">
-                    <label className="block text-slate-400 text-sm mb-1">Marquee Text Content</label>
-                    <textarea 
-                        value={configEditForm.marqueeText || ''} 
-                        onChange={e => setConfigEditForm({...configEditForm, marqueeText: e.target.value})} 
-                        className="w-full bg-black border border-slate-700 p-3 rounded-xl text-white text-sm h-24"
-                        placeholder="Add your announcement text here..."
-                    />
-                    <p className="text-[10px] text-slate-500 italic">Tip: Use " • " between announcements for better readability.</p>
+              {/* Marquee Settings */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-black border border-slate-700 rounded-xl">
+                    <div>
+                        <h4 className="text-white font-bold">Announcement Marquee</h4>
+                        <p className="text-xs text-slate-500">Enable/disable the scrolling ticker.</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setConfigEditForm({...configEditForm, showMarquee: !configEditForm.showMarquee})}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all ${configEditForm.showMarquee ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]' : 'bg-red-600 text-white opacity-60'}`}
+                    >
+                        {configEditForm.showMarquee ? <><CheckCircle size={16}/> Active</> : <><XCircle size={16}/> Disabled</>}
+                    </button>
                 </div>
-              )}
+
+                {configEditForm.showMarquee && (
+                  <div className="space-y-2">
+                      <label className="block text-slate-400 text-sm mb-1">Marquee Text Content</label>
+                      <textarea 
+                          value={configEditForm.marqueeText || ''} 
+                          onChange={e => setConfigEditForm({...configEditForm, marqueeText: e.target.value})} 
+                          className="w-full bg-black border border-slate-700 p-3 rounded-xl text-white text-sm h-24"
+                          placeholder="Add your announcement text here..."
+                      />
+                  </div>
+                )}
+              </div>
 
               <button type="submit" className="w-full py-3 bg-neon-orange text-black font-bold rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(255,87,34,0.3)]">
-                  Save Settings
+                  Save All Changes
               </button>
           </form>
       </AdminModal>

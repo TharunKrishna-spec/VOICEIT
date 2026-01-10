@@ -102,4 +102,5 @@ export interface SocialLinks {
 export interface SiteConfig {
   showMarquee: boolean;
   marqueeText?: string;
+  logo?: string; // Persistent logo storage (Base64 or URL)
 }

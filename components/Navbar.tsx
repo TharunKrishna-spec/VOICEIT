@@ -6,11 +6,16 @@ import { motion as _motion, AnimatePresence } from 'framer-motion';
 const motion = _motion as any;
 import { cn } from '../lib/utils';
 import { LOGO_IMAGE } from '../lib/initialData';
+import { useAdmin } from '../context/AdminContext';
 
 const Navbar: React.FC = () => {
+  const { siteConfig } = useAdmin();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Prefers siteConfig logo from DB, falls back to initialData
+  const activeLogo = siteConfig.logo || LOGO_IMAGE;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,13 +24,10 @@ const Navbar: React.FC = () => {
 
     const handleSpy = () => {
         const sections = ['hero', 'about', 'events', 'podcasts', 'departments', 'team'];
-        
-        // Find the current section
         const current = sections.find(section => {
             const element = document.getElementById(section);
             if (element) {
                 const rect = element.getBoundingClientRect();
-                // Check if the top of the section is within the viewport (with some offset)
                 return rect.top <= 200 && rect.bottom >= 200;
             }
             return false;
@@ -46,7 +48,6 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-        // Offset for the fixed navbar
         const yOffset = -100; 
         const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
         
@@ -70,7 +71,6 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-    {/* Desktop Fixed Logo - Left Aligned */}
     <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -78,9 +78,9 @@ const Navbar: React.FC = () => {
         className="fixed top-6 left-8 z-50 hidden md:block"
     >
         <button onClick={scrollToTop} className="block group">
-            <div className="w-12 h-12 rounded-full border border-slate-700 bg-black/50 backdrop-blur-md overflow-hidden shadow-[0_0_15px_rgba(255,87,34,0.1)] group-hover:shadow-[0_0_25px_rgba(255,87,34,0.4)] transition-all duration-300">
-                {LOGO_IMAGE ? (
-                    <img src={LOGO_IMAGE} alt="VoiceIt Logo" className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-full border border-slate-700 bg-black/50 backdrop-blur-md overflow-hidden shadow-[0_0_15px_rgba(255,87,34,0.1)] group-hover:shadow-[0_0_25px_rgba(255,87,34,0.4)] transition-all duration-300 flex items-center justify-center">
+                {activeLogo ? (
+                    <img src={activeLogo} alt="VoiceIt Logo" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-neon-orange to-red-600 flex items-center justify-center">
                         <span className="font-bold text-black text-lg">V</span>
@@ -90,7 +90,6 @@ const Navbar: React.FC = () => {
         </button>
     </motion.div>
 
-    {/* Desktop Floating Dock - Right Aligned */}
     <motion.nav
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -102,7 +101,6 @@ const Navbar: React.FC = () => {
             : "bg-black/40 backdrop-blur-md border-white/10"
       )}
     >
-        {/* Links */}
         <ul className="flex items-center gap-1">
             {navLinks.map((link) => {
                 const isActive = activeSection === link.id;
@@ -132,7 +130,6 @@ const Navbar: React.FC = () => {
 
         <div className="w-px h-6 bg-slate-700 mx-2"></div>
 
-        {/* CTA */}
         <a 
             href="#join"
             onClick={(e) => scrollToSection(e, 'join')}
@@ -143,12 +140,11 @@ const Navbar: React.FC = () => {
         </a>
     </motion.nav>
 
-    {/* Mobile Bar */}
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center bg-black/90 backdrop-blur-lg border-b border-slate-800">
         <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-slate-700">
-                 {LOGO_IMAGE ? (
-                    <img src={LOGO_IMAGE} alt="Logo" className="w-full h-full object-cover" />
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-slate-700 bg-slate-900">
+                 {activeLogo ? (
+                    <img src={activeLogo} alt="Logo" className="w-full h-full object-cover" />
                  ) : (
                     <div className="w-full h-full bg-gradient-to-br from-neon-orange to-red-600 flex items-center justify-center">
                         <span className="font-bold text-white text-xs">V</span>
@@ -165,7 +161,6 @@ const Navbar: React.FC = () => {
         </button>
     </div>
 
-    {/* Mobile Menu Overlay */}
     <AnimatePresence>
         {isMobileMenuOpen && (
             <motion.div
