@@ -1,10 +1,10 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData } from '../types';
-import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout } from '../lib/initialData';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData, SiteConfig } from '../types';
+import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout, initialSiteConfig } from '../lib/initialData';
 import { auth, db } from '../lib/firebase';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, addDoc, getDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, addDoc, getDocs, query, limit } from 'firebase/firestore';
 
 interface User {
   uid: string;
@@ -26,6 +26,7 @@ interface AdminContextType {
   testimonials: Testimonial[];
   recruitment: RecruitmentData;
   socialLinks: SocialLinks;
+  siteConfig: SiteConfig;
   isLoginOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
@@ -42,6 +43,7 @@ interface AdminContextType {
   addLead: (lead: Omit<Lead, 'id'>) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
   addPodcast: (podcast: Omit<Podcast, 'id'>) => Promise<void>;
+  updatePodcast: (id: string, data: Partial<Podcast>) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
   archiveBoard: (year: string) => Promise<void>;
   deletePastTenure: (id: string) => Promise<void>;
@@ -51,6 +53,7 @@ interface AdminContextType {
   deleteTestimonial: (id: string) => Promise<void>;
   updateRecruitment: (data: RecruitmentData) => Promise<void>;
   updateSocialLinks: (data: SocialLinks) => Promise<void>;
+  updateSiteConfig: (data: Partial<SiteConfig>) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -61,12 +64,17 @@ export const useAdmin = () => {
   return context;
 };
 
+// Helper to ensure data is a plain object without circular references or Firestore-internal types
+const sanitize = <T,>(data: T): T => {
+    return JSON.parse(JSON.stringify(data));
+};
+
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  // Data States
+  // States initialized with local data
   const [heroData, setHeroData] = useState<HeroData>(initialHero);
   const [aboutData, setAboutData] = useState<AboutData>(initialAbout);
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
@@ -79,296 +87,229 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
   const [recruitment, setRecruitment] = useState<RecruitmentData>(initialRecruitment);
   const [socialLinks, setSocialLinks] = useState<SocialLinks>(initialSocialLinks);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>(initialSiteConfig);
 
-  // --- AUTH LISTENER ---
+  // --- 1. AUTH ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser({ uid: currentUser.uid, email: currentUser.email });
-      } else {
-        setUser(null);
-      }
+      setUser(currentUser ? { uid: currentUser.uid, email: currentUser.email } : null);
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  // --- DATA LISTENERS & SEEDING ---
-  // Helper to subscribe to a collection
-  const subscribeToCollection = (colName: string, setter: React.Dispatch<any>, initial: any[]) => {
-    const colRef = collection(db, colName);
-    return onSnapshot(colRef, (snapshot) => {
-        if (snapshot.empty && initial.length > 0) {
-            // Seed if empty (Auto-Migration)
-            initial.forEach(item => {
-                // If item has an id, use it, otherwise let firestore gen it
-                if (item.id) {
-                    setDoc(doc(db, colName, item.id), item).catch(console.error);
-                } else {
-                    addDoc(colRef, item).catch(console.error);
-                }
-            });
-            setter(initial);
-        } else {
-            const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-            if (data.length > 0) setter(data);
-        }
-    });
-  };
-
-  // Helper to subscribe to a single document (content)
-  const subscribeToDoc = (docName: string, setter: React.Dispatch<any>, initial: any) => {
-    const docRef = doc(db, 'content', docName);
-    return onSnapshot(docRef, (snapshot) => {
-        if (!snapshot.exists()) {
-            // Seed
-            setDoc(docRef, initial).catch(console.error);
-            setter(initial);
-        } else {
-            setter(snapshot.data());
-        }
-    });
-  };
-
+  // --- 2. SEEDING (One-time check) ---
   useEffect(() => {
-    const unsubs = [
-        subscribeToDoc('hero', setHeroData, initialHero),
-        subscribeToDoc('about', setAboutData, initialAbout),
-        subscribeToDoc('recruitment', setRecruitment, initialRecruitment),
-        subscribeToDoc('social', setSocialLinks, initialSocialLinks),
-        
-        subscribeToCollection('departments', setDepartments, initialDepartments),
-        subscribeToCollection('events', setEvents, initialEvents),
-        subscribeToCollection('boardMembers', setBoardMembers, initialBoard),
-        subscribeToCollection('leads', setLeads, initialLeads),
-        subscribeToCollection('podcasts', setPodcasts, initialPodcasts),
-        subscribeToCollection('pastTenures', setPastTenures, initialPastTenures),
-        subscribeToCollection('pastLeadTenures', setPastLeadTenures, initialPastLeadTenures),
-        subscribeToCollection('testimonials', setTestimonials, initialTestimonials)
-    ];
+    const seedIfNeeded = async () => {
+        try {
+            const checkRef = collection(db, 'departments');
+            const snap = await getDocs(query(checkRef, limit(1)));
+            
+            if (snap.empty) {
+                console.log("Database empty. Seeding initial data...");
+                // Seed content docs
+                await setDoc(doc(db, 'content', 'hero'), sanitize(initialHero));
+                await setDoc(doc(db, 'content', 'about'), sanitize(initialAbout));
+                await setDoc(doc(db, 'content', 'recruitment'), sanitize(initialRecruitment));
+                await setDoc(doc(db, 'content', 'social'), sanitize(initialSocialLinks));
+                await setDoc(doc(db, 'content', 'config'), sanitize(initialSiteConfig));
+                
+                // Seed collections
+                const seedCol = async (name: string, data: any[]) => {
+                    for (const item of data) {
+                        const { id, ...clean } = item;
+                        if (id) await setDoc(doc(db, name, id), sanitize(clean));
+                        else await addDoc(collection(db, name), sanitize(clean));
+                    }
+                };
 
-    return () => {
-        unsubs.forEach(unsub => unsub());
+                await seedCol('departments', initialDepartments);
+                await seedCol('events', initialEvents);
+                await seedCol('boardMembers', initialBoard);
+                await seedCol('leads', initialLeads);
+                await seedCol('podcasts', initialPodcasts);
+                await seedCol('testimonials', initialTestimonials);
+            }
+        } catch (error: any) {
+            // Silently fail seeding if permission denied - the user might not be an admin
+            if (error.code === 'permission-denied') {
+                console.debug("Seeding skipped: Missing permissions. This is normal for guest users.");
+            } else {
+                console.error("Seeding error:", error);
+            }
+        }
     };
+    seedIfNeeded();
   }, []);
 
+  // --- 3. LISTENERS ---
+  useEffect(() => {
+    const logError = (name: string) => (err: any) => {
+        if (err.code === 'permission-denied') {
+            console.warn(`Firestore permission denied for "${name}". Falling back to local initial data.`);
+        } else {
+            console.error(`Firestore error in "${name}":`, err);
+        }
+    };
 
-  // --- AUTH ACTIONS ---
+    const unsubs = [
+        onSnapshot(doc(db, 'content', 'hero'), s => s.exists() && setHeroData(s.data() as HeroData), logError('hero')),
+        onSnapshot(doc(db, 'content', 'about'), s => s.exists() && setAboutData(s.data() as AboutData), logError('about')),
+        onSnapshot(doc(db, 'content', 'recruitment'), s => s.exists() && setRecruitment(s.data() as RecruitmentData), logError('recruitment')),
+        onSnapshot(doc(db, 'content', 'social'), s => s.exists() && setSocialLinks(s.data() as SocialLinks), logError('social')),
+        onSnapshot(doc(db, 'content', 'config'), s => s.exists() && setSiteConfig(s.data() as SiteConfig), logError('config')),
+        
+        onSnapshot(collection(db, 'departments'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as Department));
+            if (data.length > 0) setDepartments(data);
+        }, logError('departments')),
+        
+        onSnapshot(collection(db, 'events'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as EventItem));
+            if (data.length > 0) setEvents(data);
+        }, logError('events')),
+        
+        onSnapshot(collection(db, 'boardMembers'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as BoardMember));
+            if (data.length > 0) setBoardMembers(data);
+        }, logError('boardMembers')),
+        
+        onSnapshot(collection(db, 'leads'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as Lead));
+            if (data.length > 0) setLeads(data);
+        }, logError('leads')),
+        
+        onSnapshot(collection(db, 'podcasts'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as Podcast));
+            if (data.length > 0) setPodcasts(data);
+        }, logError('podcasts')),
+        
+        onSnapshot(collection(db, 'pastTenures'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as PastTenure));
+            if (data.length > 0) setPastTenures(data);
+        }, logError('pastTenures')),
+        
+        onSnapshot(collection(db, 'pastLeadTenures'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as PastLeadTenure));
+            if (data.length > 0) setPastLeadTenures(data);
+        }, logError('pastLeadTenures')),
+        
+        onSnapshot(collection(db, 'testimonials'), s => {
+            const data = s.docs.map(d => ({...d.data(), id: d.id} as Testimonial));
+            if (data.length > 0) setTestimonials(data);
+        }, logError('testimonials'))
+    ];
+    return () => unsubs.forEach(u => u());
+  }, []);
 
-  const login = async (email: string, pass: string) => {
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        return true;
-    } catch (e) {
-        console.error("Login Error", e);
-        return false;
+  // --- 4. ACTIONS ---
+  const login = async (e: string, p: string) => {
+    try { 
+        await signInWithEmailAndPassword(auth, e, p); 
+        return true; 
+    } catch (err) { 
+        console.error("Login attempt failed:", err); 
+        return false; 
     }
   };
 
-  const logout = async () => {
-    await signOut(auth);
-    setIsLoginOpen(false);
-  };
-
-  // --- DATA ACTIONS ---
-  // We sanitize inputs here to ensure no circular references (like Events or DOM nodes) reach Firestore.
+  const logout = () => signOut(auth);
 
   const updateHero = async (data: Partial<HeroData>) => {
-    const cleanData = {
-      title: data.title || '',
-      subtitle_p1: data.subtitle_p1 || '',
-      subtitle_highlight: data.subtitle_highlight || '',
-      description: data.description || ''
-    };
-    const newData = { ...heroData, ...cleanData };
-    setHeroData(newData);
-    await setDoc(doc(db, 'content', 'hero'), newData, { merge: true });
+    const next = sanitize({ ...heroData, ...data });
+    await setDoc(doc(db, 'content', 'hero'), next);
   };
 
   const updateAbout = async (data: AboutData) => {
-    // Deep sanitize needed for nested arrays if they come from mixed sources, but typically safe if typed.
-    // Ensure we don't pass the state object itself if it has extra props.
-    const cleanData: AboutData = {
-        sectionTitle: data.sectionTitle || '',
-        mainTitle: data.mainTitle || '',
-        description: data.description || '',
-        features: data.features.map(f => ({ id: f.id, title: f.title, text: f.text, icon: f.icon })),
-        images: [...data.images]
-    };
-    setAboutData(cleanData);
-    await setDoc(doc(db, 'content', 'about'), cleanData);
+    await setDoc(doc(db, 'content', 'about'), sanitize(data));
   };
 
   const updateDepartment = async (id: string, data: Partial<Department>) => {
-    // Only allow specific fields
-    const payload: any = {};
-    if (data.name !== undefined) payload.name = data.name;
-    if (data.description !== undefined) payload.description = data.description;
-    if (data.icon !== undefined) payload.icon = data.icon;
-    if (data.color !== undefined) payload.color = data.color;
-    
-    await updateDoc(doc(db, 'departments', id), payload);
+    const { id: _, ...payload } = data;
+    await updateDoc(doc(db, 'departments', id), sanitize(payload));
   };
 
   const addEvent = async (event: Omit<EventItem, 'id'>) => {
-    const cleanEvent = {
-        title: event.title || '',
-        year: event.year || '',
-        icon: event.icon || 'Mic',
-        description: event.description || '',
-        image: event.image || '',
-        longDescription: event.longDescription || ''
-    };
-    await addDoc(collection(db, 'events'), cleanEvent);
+    await addDoc(collection(db, 'events'), sanitize(event));
   };
 
   const updateEvent = async (id: string, data: Partial<EventItem>) => {
-    const payload: any = {};
-    if (data.title !== undefined) payload.title = data.title;
-    if (data.year !== undefined) payload.year = data.year;
-    if (data.icon !== undefined) payload.icon = data.icon;
-    if (data.description !== undefined) payload.description = data.description;
-    if (data.image !== undefined) payload.image = data.image;
-    if (data.longDescription !== undefined) payload.longDescription = data.longDescription;
-    
-    await updateDoc(doc(db, 'events', id), payload);
+    const { id: _, ...payload } = data;
+    await updateDoc(doc(db, 'events', id), sanitize(payload));
   };
 
-  const deleteEvent = async (id: string) => {
-    await deleteDoc(doc(db, 'events', id));
-  };
+  const deleteEvent = (id: string) => deleteDoc(doc(db, 'events', id));
 
   const addBoardMember = async (member: Omit<BoardMember, 'id'>) => {
-    const cleanMember = {
-        name: member.name || '',
-        role: member.role || '',
-        image: member.image || ''
-    };
-    await addDoc(collection(db, 'boardMembers'), cleanMember);
+    await addDoc(collection(db, 'boardMembers'), sanitize(member));
   };
 
-  const deleteBoardMember = async (id: string) => {
-    await deleteDoc(doc(db, 'boardMembers', id));
-  };
+  const deleteBoardMember = (id: string) => deleteDoc(doc(db, 'boardMembers', id));
 
   const addLead = async (lead: Omit<Lead, 'id'>) => {
-    const cleanLead = {
-        name: lead.name || '',
-        designation: lead.designation || '',
-        department: lead.department || '',
-        image: lead.image || '',
-        quote: lead.quote || ''
-    };
-    await addDoc(collection(db, 'leads'), cleanLead);
+    await addDoc(collection(db, 'leads'), sanitize(lead));
   };
 
-  const deleteLead = async (id: string) => {
-    await deleteDoc(doc(db, 'leads', id));
-  };
+  const deleteLead = (id: string) => deleteDoc(doc(db, 'leads', id));
 
   const addPodcast = async (podcast: Omit<Podcast, 'id'>) => {
-    const cleanPodcast = {
-        title: podcast.title || '',
-        host: podcast.host || '',
-        duration: podcast.duration || '',
-        image: podcast.image || '',
-        link: podcast.link || ''
-    };
-    await addDoc(collection(db, 'podcasts'), cleanPodcast);
+    await addDoc(collection(db, 'podcasts'), sanitize(podcast));
   };
 
-  const deletePodcast = async (id: string) => {
-    await deleteDoc(doc(db, 'podcasts', id));
+  const updatePodcast = async (id: string, data: Partial<Podcast>) => {
+    const { id: _, ...payload } = data;
+    await updateDoc(doc(db, 'podcasts', id), sanitize(payload));
   };
+
+  const deletePodcast = (id: string) => deleteDoc(doc(db, 'podcasts', id));
 
   const archiveBoard = async (year: string) => {
-    // Deep clone members to strip any non-serializable properties
-    const cleanMembers = boardMembers.map(m => ({
-        id: m.id,
-        name: m.name,
-        role: m.role,
-        image: m.image
-    }));
-    
-    const newTenure = {
-        year: year,
-        members: cleanMembers
-    };
-    await addDoc(collection(db, 'pastTenures'), newTenure);
+    const members = sanitize(boardMembers);
+    await addDoc(collection(db, 'pastTenures'), { year, members });
   };
 
-  const deletePastTenure = async (id: string) => {
-    await deleteDoc(doc(db, 'pastTenures', id));
-  };
+  const deletePastTenure = (id: string) => deleteDoc(doc(db, 'pastTenures', id));
 
   const archiveLeads = async (year: string) => {
-     const cleanLeads = leads.map(l => ({
-         id: l.id,
-         name: l.name,
-         designation: l.designation,
-         department: l.department,
-         image: l.image,
-         quote: l.quote || ''
-     }));
-
-     const newTenure = {
-        year: year,
-        leads: cleanLeads
-    };
-    await addDoc(collection(db, 'pastLeadTenures'), newTenure);
+    const leadData = sanitize(leads);
+    await addDoc(collection(db, 'pastLeadTenures'), { year, leads: leadData });
   };
 
-  const deletePastLeadTenure = async (id: string) => {
-    await deleteDoc(doc(db, 'pastLeadTenures', id));
-  };
+  const deletePastLeadTenure = (id: string) => deleteDoc(doc(db, 'pastLeadTenures', id));
 
   const addTestimonial = async (testimonial: Omit<Testimonial, 'id'>) => {
-    const cleanTestimonial = {
-        quote: testimonial.quote || '',
-        name: testimonial.name || '',
-        designation: testimonial.designation || '',
-        src: testimonial.src || ''
-    };
-    await addDoc(collection(db, 'testimonials'), cleanTestimonial);
+    await addDoc(collection(db, 'testimonials'), sanitize(testimonial));
   };
 
-  const deleteTestimonial = async (id: string) => {
-    await deleteDoc(doc(db, 'testimonials', id));
-  };
+  const deleteTestimonial = (id: string) => deleteDoc(doc(db, 'testimonials', id));
 
   const updateRecruitment = async (data: RecruitmentData) => {
-    const cleanData = {
-        isOpen: !!data.isOpen,
-        link: data.link || ''
-    };
-    setRecruitment(cleanData);
-    await setDoc(doc(db, 'content', 'recruitment'), cleanData);
+    await setDoc(doc(db, 'content', 'recruitment'), sanitize(data));
   };
 
   const updateSocialLinks = async (data: SocialLinks) => {
-    const cleanData = {
-        instagram: data.instagram || '',
-        youtube: data.youtube || '',
-        linkedin: data.linkedin || ''
-    };
-    setSocialLinks(cleanData);
-    await setDoc(doc(db, 'content', 'social'), cleanData);
+    await setDoc(doc(db, 'content', 'social'), sanitize(data));
+  };
+
+  const updateSiteConfig = async (data: Partial<SiteConfig>) => {
+    const next = sanitize({ ...siteConfig, ...data });
+    await setDoc(doc(db, 'content', 'config'), next);
   };
 
   return (
     <AdminContext.Provider value={{
-      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks,
+      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, recruitment, socialLinks, siteConfig,
       isLoginOpen, openLoginModal: () => setIsLoginOpen(true), closeLoginModal: () => setIsLoginOpen(false),
       login, logout,
       updateHero, updateAbout, updateDepartment,
       addEvent, updateEvent, deleteEvent,
       addBoardMember, deleteBoardMember,
       addLead, deleteLead,
-      addPodcast, deletePodcast,
+      addPodcast, updatePodcast, deletePodcast,
       archiveBoard, deletePastTenure,
       archiveLeads, deletePastLeadTenure,
       addTestimonial, deleteTestimonial,
-      updateRecruitment, updateSocialLinks
+      updateRecruitment, updateSocialLinks, updateSiteConfig
     }}>
       {children}
     </AdminContext.Provider>

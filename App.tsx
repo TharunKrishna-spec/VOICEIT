@@ -11,30 +11,42 @@ import Team from './components/Team';
 import Testimonials from './components/Testimonials';
 import JoinCTA from './components/JoinCTA';
 import Footer from './components/Footer';
-import { AdminProvider } from './context/AdminContext';
+import { AdminProvider, useAdmin } from './context/AdminContext';
 import AdminLogin from './components/AdminLogin';
 import Particles from './components/ui/Particles';
+import CustomCursor from './components/ui/CustomCursor';
+import Marquee from './components/ui/Marquee';
+
+const AppContent: React.FC = () => {
+  const { siteConfig } = useAdmin();
+  
+  return (
+    <div className="bg-black min-h-screen text-slate-200 selection:bg-neon-orange selection:text-black font-sans">
+      <CustomCursor />
+      {siteConfig.showMarquee && <Marquee />}
+      <Particles />
+      <Navbar />
+      <main>
+        <Hero />
+        <About />
+        <EventsTimeline />
+        <Podcasts />
+        <Departments />
+        <Team />
+        <Leads />
+        <Testimonials />
+        <JoinCTA />
+      </main>
+      <Footer />
+      <AdminLogin />
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   return (
     <AdminProvider>
-      <div className="bg-black min-h-screen text-slate-200 selection:bg-neon-orange selection:text-black font-sans">
-        <Particles />
-        <Navbar />
-        <main>
-          <Hero />
-          <About />
-          <EventsTimeline />
-          <Podcasts />
-          <Departments />
-          <Team />
-          <Leads />
-          <Testimonials />
-          <JoinCTA />
-        </main>
-        <Footer />
-        <AdminLogin />
-      </div>
+      <AppContent />
     </AdminProvider>
   );
 };

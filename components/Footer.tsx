@@ -1,15 +1,17 @@
 
 import React, { useState } from 'react';
-import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit } from 'lucide-react';
+import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { LOGO_IMAGE } from '../lib/initialData';
 import AdminModal from './ui/AdminModal';
-import { SocialLinks } from '../types';
+import { SocialLinks, SiteConfig } from '../types';
 
 const Footer: React.FC = () => {
-  const { user, openLoginModal, logout, socialLinks, updateSocialLinks } = useAdmin();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<SocialLinks>(socialLinks);
+  const { user, openLoginModal, logout, socialLinks, updateSocialLinks, siteConfig, updateSiteConfig } = useAdmin();
+  const [isEditingSocials, setIsEditingSocials] = useState(false);
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [socialEditForm, setSocialEditForm] = useState<SocialLinks>(socialLinks);
+  const [configEditForm, setConfigEditForm] = useState<SiteConfig>(siteConfig);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -22,15 +24,26 @@ const Footer: React.FC = () => {
     }
   };
 
-  const handleEditClick = () => {
-    setEditForm(socialLinks);
-    setIsEditing(true);
+  const handleEditSocials = () => {
+    setSocialEditForm(socialLinks);
+    setIsEditingSocials(true);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleEditConfig = () => {
+    setConfigEditForm(siteConfig);
+    setIsEditingConfig(true);
+  };
+
+  const handleSaveSocials = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateSocialLinks(editForm);
-    setIsEditing(false);
+    await updateSocialLinks(socialEditForm);
+    setIsEditingSocials(false);
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateSiteConfig(configEditForm);
+    setIsEditingConfig(false);
   };
 
   return (
@@ -70,7 +83,7 @@ const Footer: React.FC = () => {
                 <div className="flex items-center gap-3 mb-4">
                     <h4 className="text-white font-bold">Connect</h4>
                     {user && (
-                        <button onClick={handleEditClick} className="text-slate-500 hover:text-neon-orange transition-colors">
+                        <button onClick={handleEditSocials} className="text-slate-500 hover:text-neon-orange transition-colors">
                             <Edit size={14} />
                         </button>
                     )}
@@ -95,9 +108,14 @@ const Footer: React.FC = () => {
                 <a href="#" className="hover:text-slate-400">Privacy Policy</a>
                 
                 {user ? (
-                   <button onClick={logout} className="flex items-center gap-2 text-neon-orange hover:text-white transition-colors font-bold">
-                      <LogOut size={14} /> Logout
-                   </button>
+                   <div className="flex items-center gap-4">
+                       <button onClick={handleEditConfig} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold">
+                          <Settings size={14} /> Site Settings
+                       </button>
+                       <button onClick={logout} className="flex items-center gap-2 text-neon-orange hover:text-white transition-colors font-bold">
+                          <LogOut size={14} /> Logout
+                       </button>
+                   </div>
                 ) : (
                    <button onClick={openLoginModal} className="flex items-center gap-2 hover:text-neon-orange transition-colors">
                       <Settings size={14} /> Admin Login
@@ -108,16 +126,16 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Admin Modal for Social Links */}
-      <AdminModal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Manage Social Links">
-          <form onSubmit={handleSave} className="space-y-4">
+      <AdminModal isOpen={isEditingSocials} onClose={() => setIsEditingSocials(false)} title="Manage Social Links">
+          <form onSubmit={handleSaveSocials} className="space-y-4">
               <div>
                   <label className="block text-slate-400 text-sm mb-1 flex items-center gap-2">
                       <Instagram size={14} /> Instagram URL
                   </label>
                   <input 
                     type="text" 
-                    value={editForm.instagram} 
-                    onChange={e => setEditForm({...editForm, instagram: e.target.value})} 
+                    value={socialEditForm.instagram} 
+                    onChange={e => setSocialEditForm({...socialEditForm, instagram: e.target.value})} 
                     className="w-full bg-black border border-slate-700 p-2 rounded text-white text-sm" 
                   />
               </div>
@@ -127,8 +145,8 @@ const Footer: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
-                    value={editForm.youtube} 
-                    onChange={e => setEditForm({...editForm, youtube: e.target.value})} 
+                    value={socialEditForm.youtube} 
+                    onChange={e => setSocialEditForm({...socialEditForm, youtube: e.target.value})} 
                     className="w-full bg-black border border-slate-700 p-2 rounded text-white text-sm" 
                   />
               </div>
@@ -138,12 +156,48 @@ const Footer: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
-                    value={editForm.linkedin} 
-                    onChange={e => setEditForm({...editForm, linkedin: e.target.value})} 
+                    value={socialEditForm.linkedin} 
+                    onChange={e => setSocialEditForm({...socialEditForm, linkedin: e.target.value})} 
                     className="w-full bg-black border border-slate-700 p-2 rounded text-white text-sm" 
                   />
               </div>
               <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Save Links</button>
+          </form>
+      </AdminModal>
+
+      {/* Admin Modal for Site Config (Marquee Toggle) */}
+      <AdminModal isOpen={isEditingConfig} onClose={() => setIsEditingConfig(false)} title="Site Global Settings">
+          <form onSubmit={handleSaveConfig} className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-black border border-slate-700 rounded-xl">
+                  <div>
+                      <h4 className="text-white font-bold">Announcement Marquee</h4>
+                      <p className="text-xs text-slate-500">Enable/disable the scrolling ticker at the top.</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setConfigEditForm({...configEditForm, showMarquee: !configEditForm.showMarquee})}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all ${configEditForm.showMarquee ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]' : 'bg-red-600 text-white opacity-60'}`}
+                  >
+                      {configEditForm.showMarquee ? <><CheckCircle size={16}/> Active</> : <><XCircle size={16}/> Disabled</>}
+                  </button>
+              </div>
+
+              {configEditForm.showMarquee && (
+                <div className="space-y-2">
+                    <label className="block text-slate-400 text-sm mb-1">Marquee Text Content</label>
+                    <textarea 
+                        value={configEditForm.marqueeText || ''} 
+                        onChange={e => setConfigEditForm({...configEditForm, marqueeText: e.target.value})} 
+                        className="w-full bg-black border border-slate-700 p-3 rounded-xl text-white text-sm h-24"
+                        placeholder="Add your announcement text here..."
+                    />
+                    <p className="text-[10px] text-slate-500 italic">Tip: Use " • " between announcements for better readability.</p>
+                </div>
+              )}
+
+              <button type="submit" className="w-full py-3 bg-neon-orange text-black font-bold rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(255,87,34,0.3)]">
+                  Save Settings
+              </button>
           </form>
       </AdminModal>
     </footer>

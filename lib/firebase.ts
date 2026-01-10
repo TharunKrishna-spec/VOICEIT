@@ -4,22 +4,14 @@ import { getAuth } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
-// Helper to safely get env vars in different environments (Vite/CRA/Browser)
+// Env var lookup with safe browser fallbacks
 const getEnv = (key: string, fallback: string) => {
   try {
     // @ts-ignore
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      // @ts-ignore
-      return process.env[key];
-    }
+    if (typeof process !== 'undefined' && process.env && process.env[key]) return process.env[key];
     // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-      // @ts-ignore
-      return import.meta.env[key];
-    }
-  } catch (e) {
-    // Ignore errors if process or import.meta are not defined
-  }
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) return import.meta.env[key];
+  } catch (e) {}
   return fallback;
 };
 
@@ -36,19 +28,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Use initializeFirestore with experimentalForceLongPolling to fix "Could not reach Cloud Firestore backend"
+// Use Long Polling to bypass corporate firewalls/proxies and fix "Could not reach backend"
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
+  useFetchStreams: false // More stable for simple environments
 });
 
-// Analytics can fail in some environments (like server-side rendering or non-browser), so we wrap it
 let analytics;
 if (typeof window !== "undefined") {
     try {
         analytics = getAnalytics(app);
     } catch (e) {
-        // Suppress circular error warnings from analytics initialization in offline mode
-        console.debug("Firebase Analytics skipped:", e);
+        console.debug("Analytics skipped in this environment");
     }
 }
 

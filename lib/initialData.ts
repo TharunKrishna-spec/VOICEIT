@@ -1,5 +1,5 @@
 
-import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData } from "../types";
+import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, SiteConfig } from "../types";
 
 // PASTE YOUR BASE64 IMAGE STRING INSIDE THE QUOTES BELOW
 export const LOGO_IMAGE = ""; 
@@ -57,7 +57,7 @@ export const initialEvents: EventItem[] = [
     icon: 'Music4', 
     description: 'Live radio booth during the cultural fest, streaming non-stop for 3 days.',
     image: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac6d5?q=80&w=2066&auto=format&fit=crop',
-    longDescription: 'Vibrance is the heartbeat of VIT Chennai, and VoiceIt was right at the center of it. We set up a glass-walled live radio booth in the middle of the food street. For 72 hours, our RJs kept the energy high with track requests, live dedications, and impromptu interviews with guest artists and celebrities. The "Vibrance After Hours" segment became an instant hit, featuring acoustic jams and ghost stories that gathered a massive crowd around the booth.'
+    longDescription: 'Vibrance is the heartbeat of VIT Chennai, and VoiceIt was right at the center of it. We set up a glass-walled live radio booth in the middle of the focus street. For 72 hours, our RJs kept the energy high with track requests, live dedications, and impromptu interviews with guest artists and celebrities. The "Vibrance After Hours" segment became an instant hit, featuring acoustic jams and ghost stories that gathered a massive crowd around the booth.'
   },
   { 
     id: '3', 
@@ -207,4 +207,9 @@ export const initialSocialLinks: SocialLinks = {
   instagram: 'https://www.instagram.com/voiceit_vitcc/',
   youtube: 'https://youtube.com',
   linkedin: 'https://linkedin.com',
+};
+
+export const initialSiteConfig: SiteConfig = {
+  showMarquee: true,
+  marqueeText: "VOICEIT • RECRUITMENTS OPENING SOON • LISTEN TO THE NEW EPISODE ON SPOTIFY • THE OFFICIAL RADIO CLUB OF VIT CHENNAI • "
 };
