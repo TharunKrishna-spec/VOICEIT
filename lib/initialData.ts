@@ -1,5 +1,5 @@
 
-import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, SiteConfig } from "../types";
+import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, SiteConfig, Memory } from "../types";
 
 // PASTE YOUR BASE64 IMAGE STRING INSIDE THE QUOTES BELOW
 export const LOGO_IMAGE = ""; 
@@ -213,3 +213,12 @@ export const initialSiteConfig: SiteConfig = {
   showMarquee: true,
   marqueeText: "VOICEIT • RECRUITMENTS OPENING SOON • LISTEN TO THE NEW EPISODE ON SPOTIFY • THE OFFICIAL RADIO CLUB OF VIT CHENNAI • "
 };
+
+export const initialMemories: Memory[] = [
+  { id: '1', image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop', description: 'Late night studio sessions that turned into family dinners.', date: 'Dec 2023' },
+  { id: '2', image: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop', description: 'The electric vibe at the Vibrance Radio Booth.', date: 'Oct 2023' },
+  { id: '3', image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop', description: 'Planning our next big move at the Focus Street.', date: 'Aug 2023' },
+  { id: '4', image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2070&auto=format&fit=crop', description: 'Celebrations after the successful Spooktober series.', date: 'Nov 2023' },
+  { id: '5', image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop', description: 'Our very first open mic night under the stars.', date: 'Jan 2023' },
+  { id: '6', image: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=2070&auto=format&fit=crop', description: 'Nervous faces and big dreams at Auditions 2024.', date: 'Feb 2024' }
+];

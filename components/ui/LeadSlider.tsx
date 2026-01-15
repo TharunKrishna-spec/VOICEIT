@@ -3,13 +3,14 @@ import React, { useState } from "react";
 // Fix: Systemic type issues with framer-motion in this environment
 import { motion as _motion, AnimatePresence } from "framer-motion";
 const motion = _motion as any;
-import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Trash2, Edit } from "lucide-react";
 import { Lead } from "../../types";
 
 interface LeadSliderProps {
   leads: Lead[];
   className?: string;
   onDelete?: (id: string) => void;
+  onEdit?: (l: Lead) => void;
   isAdmin?: boolean;
 }
 
@@ -17,12 +18,12 @@ export const LeadSlider = ({
   leads,
   className,
   onDelete,
+  onEdit,
   isAdmin
 }: LeadSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right">("right");
 
-  // Safety check
   if (!leads || leads.length === 0) {
     return <div className="text-center text-slate-500 py-10">No leads found.</div>;
   }
@@ -44,12 +45,10 @@ export const LeadSlider = ({
     setCurrentIndex(index);
   };
 
-  // Get next 3 for thumbnail, filtering out current
   const thumbnailLeads = leads
     .filter((_, i) => i !== currentIndex)
     .slice(0, 3);
 
-  // Animation variants
   const imageVariants = {
     enter: (direction: "left" | "right") => ({
       y: direction === "right" ? "100%" : "-100%",
@@ -76,13 +75,9 @@ export const LeadSlider = ({
 
   return (
     <div className={`relative w-full min-h-[600px] overflow-hidden bg-slate-950 text-white p-4 md:p-12 rounded-3xl border border-slate-800 ${className}`}>
-      
-      {/* Background Glow */}
       <div className="absolute top-1/2 right-0 w-96 h-96 bg-neon-orange/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full relative z-10">
-        
-        {/* === Left Column: Meta and Thumbnails === */}
         <div className="md:col-span-3 flex flex-col justify-between order-2 md:order-1">
           <div className="flex flex-row md:flex-col justify-between md:justify-start space-x-4 md:space-x-0 md:space-y-4">
             <span className="text-sm text-neon-orange font-mono font-bold">
@@ -94,7 +89,6 @@ export const LeadSlider = ({
             </h2>
           </div>
 
-          {/* Thumbnail Navigation */}
           <div className="flex space-x-3 mt-8 md:mt-0">
             {thumbnailLeads.map((lead) => {
               const originalIndex = leads.findIndex((l) => l.id === lead.id);
@@ -115,8 +109,7 @@ export const LeadSlider = ({
           </div>
         </div>
 
-        {/* === Center Column: Main Image === */}
-        <div className="md:col-span-4 relative h-80 min-h-[400px] md:min-h-[500px] order-1 md:order-2 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
+        <div className="md:col-span-4 relative h-80 min-h-[400px] md:min-h-[500px] order-1 md:order-2 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 group">
           <AnimatePresence initial={false} custom={direction}>
             <motion.img
               key={currentIndex}
@@ -132,21 +125,31 @@ export const LeadSlider = ({
             />
           </AnimatePresence>
           
-          {/* Admin Delete Button Overlay */}
-          {isAdmin && onDelete && (
-            <button 
-                onClick={(e) => { e.stopPropagation(); onDelete(activeLead.id); }}
-                className="absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-500 shadow-lg z-20"
-                title="Delete this lead"
-            >
-                <Trash2 size={18} />
-            </button>
+          {isAdmin && (
+            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                {onEdit && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onEdit(activeLead); }}
+                        className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-500 shadow-lg"
+                        title="Edit this lead"
+                    >
+                        <Edit size={18} />
+                    </button>
+                )}
+                {onDelete && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onDelete(activeLead.id); }}
+                        className="bg-red-600 text-white p-2 rounded-full hover:bg-red-500 shadow-lg"
+                        title="Delete this lead"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                )}
+            </div>
           )}
         </div>
 
-        {/* === Right Column: Text and Navigation === */}
         <div className="md:col-span-5 flex flex-col justify-between md:pl-8 order-3 md:order-3">
-          {/* Text Content */}
           <div className="relative overflow-hidden pt-4 md:pt-20 min-h-[250px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
@@ -171,7 +174,6 @@ export const LeadSlider = ({
             </AnimatePresence>
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex items-center space-x-4 mt-8 md:mt-0">
             <button
               className="w-12 h-12 rounded-full border border-slate-600 hover:border-neon-orange hover:text-neon-orange text-white flex items-center justify-center transition-colors"

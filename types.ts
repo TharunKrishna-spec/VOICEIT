@@ -104,3 +104,10 @@ export interface SiteConfig {
   marqueeText?: string;
   logo?: string; // Persistent logo storage (Base64 or URL)
 }
+
+export interface Memory {
+  id: string;
+  image: string;
+  description: string;
+  date?: string;
+}

@@ -10,6 +10,7 @@ import Leads from './components/Leads';
 import Team from './components/Team';
 import Testimonials from './components/Testimonials';
 import JoinCTA from './components/JoinCTA';
+import MemoryLane from './components/MemoryLane';
 import Footer from './components/Footer';
 import { AdminProvider, useAdmin } from './context/AdminContext';
 import AdminLogin from './components/AdminLogin';
@@ -35,6 +36,8 @@ const AppContent: React.FC = () => {
         <Team />
         <Leads />
         <Testimonials />
+        {/* Memory Lane now comes before the Join/Recruitment CTA */}
+        <MemoryLane />
         <JoinCTA />
       </main>
       <Footer />

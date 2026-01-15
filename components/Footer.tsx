@@ -1,19 +1,19 @@
 
 import React, { useState } from 'react';
-import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
+import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle, Image as ImageIcon, Database, RefreshCw } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { LOGO_IMAGE } from '../lib/initialData';
 import AdminModal from './ui/AdminModal';
 import { SocialLinks, SiteConfig } from '../types';
 
 const Footer: React.FC = () => {
-  const { user, openLoginModal, logout, socialLinks, updateSocialLinks, siteConfig, updateSiteConfig } = useAdmin();
+  const { user, openLoginModal, logout, socialLinks, updateSocialLinks, siteConfig, updateSiteConfig, syncDatabase } = useAdmin();
   const [isEditingSocials, setIsEditingSocials] = useState(false);
   const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [socialEditForm, setSocialEditForm] = useState<SocialLinks>(socialLinks);
   const [configEditForm, setConfigEditForm] = useState<SiteConfig>(siteConfig);
 
-  // Prefers siteConfig logo from DB, falls back to initialData
   const activeLogo = siteConfig.logo || LOGO_IMAGE;
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -26,14 +26,11 @@ const Footer: React.FC = () => {
     }
   };
 
-  const handleEditSocials = () => {
-    setSocialEditForm(socialLinks);
-    setIsEditingSocials(true);
-  };
-
-  const handleEditConfig = () => {
-    setConfigEditForm(siteConfig);
-    setIsEditingConfig(true);
+  const handleSync = async () => {
+    setIsSyncing(true);
+    await syncDatabase();
+    setIsSyncing(false);
+    alert("Cloud Sync attempt finished. Check your Firestore console!");
   };
 
   const handleSaveSocials = async (e: React.FormEvent) => {
@@ -85,7 +82,7 @@ const Footer: React.FC = () => {
                 <div className="flex items-center gap-3 mb-4">
                     <h4 className="text-white font-bold">Connect</h4>
                     {user && (
-                        <button onClick={handleEditSocials} className="text-slate-500 hover:text-neon-orange transition-colors">
+                        <button onClick={() => setIsEditingSocials(true)} className="text-slate-500 hover:text-neon-orange transition-colors">
                             <Edit size={14} />
                         </button>
                     )}
@@ -111,7 +108,15 @@ const Footer: React.FC = () => {
                 
                 {user ? (
                    <div className="flex items-center gap-4">
-                       <button onClick={handleEditConfig} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold">
+                       <button 
+                         onClick={handleSync} 
+                         disabled={isSyncing}
+                         className="flex items-center gap-2 text-blue-400 hover:text-white transition-colors font-bold disabled:opacity-50"
+                       >
+                          {isSyncing ? <RefreshCw className="animate-spin" size={14} /> : <Database size={14} />} 
+                          Sync Database
+                       </button>
+                       <button onClick={() => setIsEditingConfig(true)} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold">
                           <Settings size={14} /> Site Settings
                        </button>
                        <button onClick={logout} className="flex items-center gap-2 text-neon-orange hover:text-white transition-colors font-bold">
@@ -127,7 +132,6 @@ const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* Admin Modal for Social Links */}
       <AdminModal isOpen={isEditingSocials} onClose={() => setIsEditingSocials(false)} title="Manage Social Links">
           <form onSubmit={handleSaveSocials} className="space-y-4">
               <div>
@@ -167,11 +171,8 @@ const Footer: React.FC = () => {
           </form>
       </AdminModal>
 
-      {/* Admin Modal for Site Config (Marquee & Logo) */}
       <AdminModal isOpen={isEditingConfig} onClose={() => setIsEditingConfig(false)} title="Site Global Settings">
           <form onSubmit={handleSaveConfig} className="space-y-6">
-              
-              {/* Logo Management */}
               <div className="space-y-4 pb-6 border-b border-slate-800">
                   <h4 className="text-white font-bold flex items-center gap-2"><ImageIcon size={18} className="text-neon-orange" /> Brand Logo</h4>
                   <div className="flex gap-4 items-start">
@@ -192,10 +193,8 @@ const Footer: React.FC = () => {
                           />
                       </div>
                   </div>
-                  <p className="text-[10px] text-slate-500 italic leading-tight">Paste your club's square logo here. Transparent background recommended.</p>
               </div>
 
-              {/* Marquee Settings */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-black border border-slate-700 rounded-xl">
                     <div>
@@ -205,7 +204,7 @@ const Footer: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setConfigEditForm({...configEditForm, showMarquee: !configEditForm.showMarquee})}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all ${configEditForm.showMarquee ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]' : 'bg-red-600 text-white opacity-60'}`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all ${configEditForm.showMarquee ? 'bg-green-600 text-white' : 'bg-red-600 text-white opacity-60'}`}
                     >
                         {configEditForm.showMarquee ? <><CheckCircle size={16}/> Active</> : <><XCircle size={16}/> Disabled</>}
                     </button>
@@ -218,7 +217,6 @@ const Footer: React.FC = () => {
                           value={configEditForm.marqueeText || ''} 
                           onChange={e => setConfigEditForm({...configEditForm, marqueeText: e.target.value})} 
                           className="w-full bg-black border border-slate-700 p-3 rounded-xl text-white text-sm h-24"
-                          placeholder="Add your announcement text here..."
                       />
                   </div>
                 )}

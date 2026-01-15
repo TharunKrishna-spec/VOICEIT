@@ -5,21 +5,33 @@ import Section from './ui/Section';
 import { motion as _motion } from 'framer-motion';
 const motion = _motion as any;
 import { useAdmin } from '../context/AdminContext';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Edit } from 'lucide-react';
 import AdminModal from './ui/AdminModal';
 import { Testimonial } from '../types';
 import { AnimatedTestimonials } from './ui/AnimatedTestimonials';
 
 const Testimonials: React.FC = () => {
-  const { testimonials, user, addTestimonial, deleteTestimonial } = useAdmin();
+  const { testimonials, user, addTestimonial, updateTestimonial, deleteTestimonial } = useAdmin();
   const [isManaging, setIsManaging] = useState(false);
-  const [newTestimonial, setNewTestimonial] = useState<Partial<Testimonial>>({ name: '', designation: '', quote: '', src: '' });
+  const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial>>({ name: '', designation: '', quote: '', src: '' });
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    setEditingTestimonial({ name: '', designation: '', quote: '', src: '' });
+  };
+
+  const handleOpenEdit = (t: Testimonial) => {
+    setEditingTestimonial(t);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // @ts-ignore
-    await addTestimonial(newTestimonial);
-    setNewTestimonial({ name: '', designation: '', quote: '', src: '' });
+    if (editingTestimonial.id) {
+        await updateTestimonial(editingTestimonial.id, editingTestimonial);
+    } else {
+        // @ts-ignore
+        await addTestimonial(editingTestimonial);
+    }
+    setEditingTestimonial({ name: '', designation: '', quote: '', src: '' });
   };
 
   return (
@@ -46,26 +58,30 @@ const Testimonials: React.FC = () => {
         />
       </div>
 
-      {/* Admin Modal for Managing Testimonials */}
       <AdminModal isOpen={isManaging} onClose={() => setIsManaging(false)} title="Manage Testimonials">
           <div className="space-y-8">
-              {/* Add New */}
               <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                  <h4 className="text-sm font-bold text-neon-orange mb-3">Add New Testimonial</h4>
-                  <form onSubmit={handleAdd} className="space-y-3">
-                      <input required placeholder="Name" value={newTestimonial.name} onChange={e => setNewTestimonial({...newTestimonial, name: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
-                      <input required placeholder="Designation (e.g., Alumni)" value={newTestimonial.designation} onChange={e => setNewTestimonial({...newTestimonial, designation: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
-                      <textarea required placeholder="Quote" value={newTestimonial.quote} onChange={e => setNewTestimonial({...newTestimonial, quote: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm h-20" />
-                      <input required placeholder="Image URL" value={newTestimonial.src} onChange={e => setNewTestimonial({...newTestimonial, src: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
-                      <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded text-sm hover:bg-white transition-colors">Add</button>
+                  <h4 className="text-sm font-bold text-neon-orange mb-3">{editingTestimonial.id ? "Edit Testimonial" : "Add New Testimonial"}</h4>
+                  <form onSubmit={handleSave} className="space-y-3">
+                      <input required placeholder="Name" value={editingTestimonial.name} onChange={e => setEditingTestimonial({...editingTestimonial, name: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
+                      <input required placeholder="Designation (e.g., Alumni)" value={editingTestimonial.designation} onChange={e => setEditingTestimonial({...editingTestimonial, designation: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
+                      <textarea required placeholder="Quote" value={editingTestimonial.quote} onChange={e => setEditingTestimonial({...editingTestimonial, quote: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm h-20" />
+                      <input required placeholder="Image URL" value={editingTestimonial.src} onChange={e => setEditingTestimonial({...editingTestimonial, src: e.target.value})} className="w-full bg-black border border-slate-600 p-2 rounded text-white text-sm" />
+                      <div className="flex gap-2">
+                        <button type="submit" className="flex-1 py-2 bg-neon-orange text-black font-bold rounded text-sm hover:bg-white transition-colors">
+                            {editingTestimonial.id ? "Update" : "Add"}
+                        </button>
+                        {editingTestimonial.id && (
+                            <button type="button" onClick={handleOpenAdd} className="px-4 py-2 bg-slate-700 text-white rounded text-sm">Cancel</button>
+                        )}
+                      </div>
                   </form>
               </div>
 
-              {/* List Existing (Fallback list if slider management isn't enough) */}
               <div className="space-y-2">
                   <h4 className="text-sm font-bold text-white mb-2">Existing Testimonials</h4>
                   {testimonials.map(t => (
-                      <div key={t.id} className="flex items-center justify-between bg-black p-3 rounded border border-slate-800">
+                      <div key={t.id} className="flex items-center justify-between bg-black p-3 rounded border border-slate-800 group">
                           <div className="flex items-center gap-3">
                               <img src={t.src} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
                               <div>
@@ -73,9 +89,14 @@ const Testimonials: React.FC = () => {
                                   <div className="text-xs text-slate-500 truncate max-w-[150px]">{t.quote}</div>
                               </div>
                           </div>
-                          <button onClick={() => deleteTestimonial(t.id)} className="text-red-500 hover:text-red-400 p-2">
-                              <Trash2 size={16} />
-                          </button>
+                          <div className="flex gap-1">
+                              <button onClick={() => handleOpenEdit(t)} className="text-blue-500 hover:text-blue-400 p-2">
+                                  <Edit size={16} />
+                              </button>
+                              <button onClick={() => deleteTestimonial(t.id)} className="text-red-500 hover:text-red-400 p-2">
+                                  <Trash2 size={16} />
+                              </button>
+                          </div>
                       </div>
                   ))}
               </div>

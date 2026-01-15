@@ -5,27 +5,40 @@ import Section from './ui/Section';
 import { motion as _motion, AnimatePresence } from 'framer-motion';
 const motion = _motion as any;
 import { useAdmin } from '../context/AdminContext';
-import { Plus, History, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, History, Trash2, ChevronUp, ChevronDown, Edit } from 'lucide-react';
 import AdminModal from './ui/AdminModal';
 import { Lead } from '../types';
 import { LeadSlider } from './ui/LeadSlider';
 
 const Leads: React.FC = () => {
-  const { leads, pastLeadTenures, user, addLead, deleteLead, archiveLeads, deletePastLeadTenure } = useAdmin();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newLead, setNewLead] = useState<Partial<Lead>>({ name: '', designation: '', department: '', image: '', quote: '' });
+  const { leads, pastLeadTenures, user, addLead, updateLead, deleteLead, archiveLeads, deletePastLeadTenure } = useAdmin();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Partial<Lead>>({ name: '', designation: '', department: '', image: '', quote: '' });
   
-  // Past Tenures State
   const [showPastTenures, setShowPastTenures] = useState(false);
   const [archiveYear, setArchiveYear] = useState('');
   const [expandedTenureId, setExpandedTenureId] = useState<string | null>(null);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    setEditingLead({ name: '', designation: '', department: '', image: '', quote: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (l: Lead) => {
+    setEditingLead(l);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // @ts-ignore
-    await addLead(newLead);
-    setIsAdding(false);
-    setNewLead({ name: '', designation: '', department: '', image: '', quote: '' });
+    if (editingLead.id) {
+        await updateLead(editingLead.id, editingLead);
+    } else {
+        // @ts-ignore
+        await addLead(editingLead);
+    }
+    setIsModalOpen(false);
+    setEditingLead({ name: '', designation: '', department: '', image: '', quote: '' });
   };
 
   const handleArchive = async (e: React.FormEvent) => {
@@ -56,7 +69,7 @@ const Leads: React.FC = () => {
                 <History size={16} /> Past Tenures
             </button>
             {user && (
-                <button onClick={() => setIsAdding(true)} className="bg-neon-orange text-black px-5 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-[0_0_20px_rgba(255,87,34,0.4)]">
+                <button onClick={handleOpenAdd} className="bg-neon-orange text-black px-5 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-white transition-colors shadow-[0_0_20px_rgba(255,87,34,0.4)]">
                     <Plus size={16} /> Add Lead
                 </button>
             )}
@@ -64,21 +77,22 @@ const Leads: React.FC = () => {
       </div>
 
       <div className="w-full max-w-7xl mx-auto">
-         <LeadSlider leads={leads} onDelete={deleteLead} isAdmin={!!user} />
+         <LeadSlider leads={leads} onDelete={deleteLead} onEdit={handleOpenEdit} isAdmin={!!user} />
       </div>
 
-      <AdminModal isOpen={isAdding} onClose={() => setIsAdding(false)} title="Add Lead">
-          <form onSubmit={handleAdd} className="space-y-4">
-              <input required placeholder="Name" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Designation (e.g. Head of Events)" value={newLead.designation} onChange={e => setNewLead({...newLead, designation: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Department (e.g. Events)" value={newLead.department} onChange={e => setNewLead({...newLead, department: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <textarea placeholder="Quote / Bio (Optional)" value={newLead.quote || ''} onChange={e => setNewLead({...newLead, quote: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-24" />
-              <input required placeholder="Image URL" value={newLead.image} onChange={e => setNewLead({...newLead, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Add Lead</button>
+      <AdminModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingLead.id ? "Edit Lead" : "Add Lead"}>
+          <form onSubmit={handleSave} className="space-y-4">
+              <input required placeholder="Name" value={editingLead.name} onChange={e => setEditingLead({...editingLead, name: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Designation (e.g. Head of Events)" value={editingLead.designation} onChange={e => setEditingLead({...editingLead, designation: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Department (e.g. Events)" value={editingLead.department} onChange={e => setEditingLead({...editingLead, department: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <textarea placeholder="Quote / Bio (Optional)" value={editingLead.quote || ''} onChange={e => setEditingLead({...editingLead, quote: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white h-24" />
+              <input required placeholder="Image URL" value={editingLead.image} onChange={e => setEditingLead({...editingLead, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">
+                  {editingLead.id ? "Update Lead" : "Add Lead"}
+              </button>
           </form>
       </AdminModal>
 
-      {/* Past Tenures Modal */}
       <AdminModal isOpen={showPastTenures} onClose={() => setShowPastTenures(false)} title="Archive: Past Leads">
           <div className="space-y-6">
               {user && (

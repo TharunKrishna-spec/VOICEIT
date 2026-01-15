@@ -3,28 +3,41 @@ import React, { useState } from 'react';
 import Section from './ui/Section';
 import { BoardMember } from '../types';
 import { useAdmin } from '../context/AdminContext';
-import { Plus, Trash2, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, History, ChevronDown, ChevronUp, Edit } from 'lucide-react';
 import AdminModal from './ui/AdminModal';
 // Fix: Systemic type issues with framer-motion in this environment
 import { motion as _motion, AnimatePresence } from 'framer-motion';
 const motion = _motion as any;
 
 const Team: React.FC = () => {
-  const { boardMembers, pastTenures, user, addBoardMember, deleteBoardMember, archiveBoard, deletePastTenure } = useAdmin();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newMember, setNewMember] = useState<Partial<BoardMember>>({ name: '', role: '', image: '' });
+  const { boardMembers, pastTenures, user, addBoardMember, updateBoardMember, deleteBoardMember, archiveBoard, deletePastTenure } = useAdmin();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<Partial<BoardMember>>({ name: '', role: '', image: '' });
   
-  // Past Tenures State
   const [showPastTenures, setShowPastTenures] = useState(false);
   const [archiveYear, setArchiveYear] = useState('');
   const [expandedTenureId, setExpandedTenureId] = useState<string | null>(null);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    setEditingMember({ name: '', role: '', image: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (m: BoardMember) => {
+    setEditingMember(m);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // @ts-ignore
-    await addBoardMember(newMember);
-    setIsAdding(false);
-    setNewMember({ name: '', role: '', image: '' });
+    if (editingMember.id) {
+        await updateBoardMember(editingMember.id, editingMember);
+    } else {
+        // @ts-ignore
+        await addBoardMember(editingMember);
+    }
+    setIsModalOpen(false);
+    setEditingMember({ name: '', role: '', image: '' });
   };
 
   const handleArchive = async (e: React.FormEvent) => {
@@ -55,7 +68,7 @@ const Team: React.FC = () => {
                 <History size={16} /> <span className="hidden sm:inline">Past Tenures</span>
             </button>
             {user && (
-                <button onClick={() => setIsAdding(true)} className="bg-neon-orange text-black px-4 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-white transition-colors text-sm md:text-base">
+                <button onClick={handleOpenAdd} className="bg-neon-orange text-black px-4 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-white transition-colors text-sm md:text-base">
                     <Plus size={16} /> Add Member
                 </button>
             )}
@@ -66,9 +79,14 @@ const Team: React.FC = () => {
         {boardMembers.map((member) => (
             <div key={member.id} className="group relative overflow-hidden rounded-xl bg-slate-900 border border-slate-800 hover:border-neon-orange/50 transition-colors duration-300">
                 {user && (
-                    <button onClick={() => deleteBoardMember(member.id)} className="absolute top-2 right-2 z-20 p-2 bg-red-600 text-white rounded-full hover:bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Trash2 size={16} />
-                    </button>
+                    <div className="absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleOpenEdit(member)} className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500">
+                            <Edit size={16} />
+                        </button>
+                        <button onClick={() => deleteBoardMember(member.id)} className="p-2 bg-red-600 text-white rounded-full hover:bg-red-500">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                 )}
                 <div className="aspect-square overflow-hidden">
                     <img 
@@ -87,17 +105,17 @@ const Team: React.FC = () => {
         ))}
       </div>
 
-      {/* Add Member Modal */}
-      <AdminModal isOpen={isAdding} onClose={() => setIsAdding(false)} title="Add Board Member">
-          <form onSubmit={handleAdd} className="space-y-4">
-              <input required placeholder="Name" value={newMember.name} onChange={e => setNewMember({...newMember, name: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Role" value={newMember.role} onChange={e => setNewMember({...newMember, role: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <input required placeholder="Image URL" value={newMember.image} onChange={e => setNewMember({...newMember, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
-              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">Add Member</button>
+      <AdminModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingMember.id ? "Edit Member" : "Add Board Member"}>
+          <form onSubmit={handleSave} className="space-y-4">
+              <input required placeholder="Name" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Role" value={editingMember.role} onChange={e => setEditingMember({...editingMember, role: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <input required placeholder="Image URL" value={editingMember.image} onChange={e => setEditingMember({...editingMember, image: e.target.value})} className="w-full bg-black border border-slate-700 p-2 rounded text-white" />
+              <button type="submit" className="w-full py-2 bg-neon-orange text-black font-bold rounded">
+                  {editingMember.id ? "Update Member" : "Add Member"}
+              </button>
           </form>
       </AdminModal>
 
-      {/* Past Tenures Modal */}
       <AdminModal isOpen={showPastTenures} onClose={() => setShowPastTenures(false)} title="Archive: Past Tenures">
           <div className="space-y-6">
               {user && (
