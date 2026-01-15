@@ -1,12 +1,16 @@
 
 import React, { useState } from 'react';
-import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle, Image as ImageIcon, Database, RefreshCw } from 'lucide-react';
+import { Instagram, Youtube, Linkedin, LogOut, Settings, Edit, CheckCircle, XCircle, Image as ImageIcon, Database, RefreshCw, ShoppingCart, Home } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { LOGO_IMAGE } from '../lib/initialData';
 import AdminModal from './ui/AdminModal';
 import { SocialLinks, SiteConfig } from '../types';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate: (page: 'home' | 'shop') => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { user, openLoginModal, logout, socialLinks, updateSocialLinks, siteConfig, updateSiteConfig, syncDatabase } = useAdmin();
   const [isEditingSocials, setIsEditingSocials] = useState(false);
   const [isEditingConfig, setIsEditingConfig] = useState(false);
@@ -16,14 +20,17 @@ const Footer: React.FC = () => {
 
   const activeLogo = siteConfig.logo || LOGO_IMAGE;
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const scrollToSection = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    const element = document.getElementById(id);
-    if (element) {
-        const yOffset = -100; 
-        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-    }
+    onNavigate('home');
+    setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+            const yOffset = -100; 
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }, 100);
   };
 
   const handleSync = async () => {
@@ -51,30 +58,41 @@ const Footer: React.FC = () => {
         <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                     <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden flex items-center justify-center bg-slate-900">
-                        {activeLogo ? (
-                            <img src={activeLogo} alt="VoiceIt Logo" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full bg-neon-orange flex items-center justify-center">
-                                <span className="font-bold text-black text-sm">V</span>
-                            </div>
-                        )}
-                     </div>
-                     <span className="text-2xl font-display font-bold tracking-tight text-white">VOICEIT</span>
+                     <button onClick={() => onNavigate('home')} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden flex items-center justify-center bg-slate-900">
+                            {activeLogo ? (
+                                <img src={activeLogo} alt="VoiceIt Logo" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-neon-orange flex items-center justify-center">
+                                    <span className="font-bold text-black text-sm">V</span>
+                                </div>
+                            )}
+                        </div>
+                        <span className="text-2xl font-display font-bold tracking-tight text-white">VOICEIT</span>
+                     </button>
                 </div>
                 <p className="text-slate-500 max-w-xs">
                     The Official Radio Club of VIT Chennai. <br/>
                     Entertaining, engaging, and enlightening the campus since 2013.
                 </p>
+                {/* Merch Shortcut Button */}
+                <button 
+                  onClick={() => onNavigate('shop')}
+                  className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-full text-xs font-bold text-slate-400 hover:text-neon-orange hover:border-neon-orange transition-all group"
+                >
+                  <ShoppingCart size={14} className="group-hover:scale-110 transition-transform" />
+                  VoiceIt Merch Store
+                </button>
             </div>
             
             <div>
                 <h4 className="text-white font-bold mb-4">Quick Links</h4>
                 <ul className="space-y-2 text-slate-500">
-                    <li><a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="hover:text-neon-orange transition-colors cursor-pointer">About</a></li>
-                    <li><a href="#events" onClick={(e) => scrollToSection(e, 'events')} className="hover:text-neon-orange transition-colors cursor-pointer">Events</a></li>
-                    <li><a href="#departments" onClick={(e) => scrollToSection(e, 'departments')} className="hover:text-neon-orange transition-colors cursor-pointer">Departments</a></li>
-                    <li><a href="#team" onClick={(e) => scrollToSection(e, 'team')} className="hover:text-neon-orange transition-colors cursor-pointer">Team</a></li>
+                    <li><button onClick={() => onNavigate('home')} className="hover:text-neon-orange transition-colors cursor-pointer flex items-center gap-2"><Home size={14}/> Home</button></li>
+                    <li><button onClick={(e) => scrollToSection(e, 'about')} className="hover:text-neon-orange transition-colors cursor-pointer">About</button></li>
+                    <li><button onClick={(e) => scrollToSection(e, 'events')} className="hover:text-neon-orange transition-colors cursor-pointer">Events</button></li>
+                    <li><button onClick={() => onNavigate('shop')} className="hover:text-neon-orange transition-colors cursor-pointer flex items-center gap-2"><ShoppingCart size={14}/> Shop</button></li>
+                    <li><button onClick={(e) => scrollToSection(e, 'team')} className="hover:text-neon-orange transition-colors cursor-pointer">Team</button></li>
                 </ul>
             </div>
 

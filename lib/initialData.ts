@@ -1,5 +1,5 @@
 
-import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, SiteConfig, Memory } from "../types";
+import { Department, EventItem, Lead, BoardMember, HeroData, Podcast, PastTenure, Testimonial, RecruitmentData, PastLeadTenure, SocialLinks, AboutData, SiteConfig, Memory, MerchItem } from "../types";
 
 // PASTE YOUR BASE64 IMAGE STRING INSIDE THE QUOTES BELOW
 export const LOGO_IMAGE = ""; 
@@ -89,10 +89,10 @@ export const initialEvents: EventItem[] = [
 ];
 
 export const initialBoard: BoardMember[] = [
-  { id: '1', name: 'Arjun Das', role: 'President', image: 'https://picsum.photos/300/300?random=10' },
-  { id: '2', name: 'Sara Khan', role: 'Vice President', image: 'https://picsum.photos/300/300?random=11' },
-  { id: '3', name: 'Vikram R', role: 'General Secretary', image: 'https://picsum.photos/300/300?random=12' },
-  { id: '4', name: 'Priya S', role: 'Design Head', image: 'https://picsum.photos/300/300?random=13' },
+  { id: '1', name: 'Arjun Das', role: 'President', tagline: 'Visionary and voice.', image: 'https://picsum.photos/300/300?random=10' },
+  { id: '2', name: 'Sara Khan', role: 'Vice President', tagline: 'Connecting creativity.', image: 'https://picsum.photos/300/300?random=11' },
+  { id: '3', name: 'Vikram R', role: 'General Secretary', tagline: 'The backbone of frequency.', image: 'https://picsum.photos/300/300?random=12' },
+  { id: '4', name: 'Priya S', role: 'Design Head', tagline: 'Visualizing soundscapes.', image: 'https://picsum.photos/300/300?random=13' },
 ];
 
 export const initialLeads: Lead[] = [
@@ -145,22 +145,29 @@ export const initialPodcasts: Podcast[] = [
   { id: '4', title: 'Music Theory & Chill', host: 'RJ Karthik', duration: '32m', image: 'https://picsum.photos/400/400?random=53' },
 ];
 
+export const initialMerch: MerchItem[] = [
+  { id: 'm1', name: 'VoiceIt Oversized Tee', price: '₹599', category: 'Apparel', isAvailable: true, description: 'Classic black oversized t-shirt with neon orange branding.', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1000&auto=format&fit=crop' },
+  { id: 'm2', name: 'Studio Session Hoodie', price: '₹999', category: 'Apparel', isAvailable: false, description: 'Premium heavy-weight hoodie for those late-night editing sessions.', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1000&auto=format&fit=crop' },
+  { id: 'm3', name: 'Frequency Tote Bag', price: '₹249', category: 'Accessories', isAvailable: true, description: 'Eco-friendly canvas tote with the VoiceIt waveform pattern.', image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1000&auto=format&fit=crop' },
+  { id: 'm4', name: 'Podcast Ready Mug', price: '₹349', category: 'Lifestyle', isAvailable: true, description: 'The perfect ceramic mug for your pre-show coffee.', image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?q=80&w=1000&auto=format&fit=crop' },
+];
+
 export const initialPastTenures: PastTenure[] = [
   {
     id: '1',
     year: '2023-24',
     members: [
-      { id: 'p1', name: 'Rahul V', role: 'President', image: 'https://picsum.photos/300/300?random=60' },
-      { id: 'p2', name: 'Sneha M', role: 'Vice President', image: 'https://picsum.photos/300/300?random=61' },
-      { id: 'p3', name: 'Amit K', role: 'General Secretary', image: 'https://picsum.photos/300/300?random=62' },
+      { id: 'p1', name: 'Rahul V', role: 'President', tagline: 'Innovation first.', image: 'https://picsum.photos/300/300?random=60' },
+      { id: 'p2', name: 'Sneha M', role: 'Vice President', tagline: 'Art meets sound.', image: 'https://picsum.photos/300/300?random=61' },
+      { id: 'p3', name: 'Amit K', role: 'General Secretary', tagline: 'The coordinator.', image: 'https://picsum.photos/300/300?random=62' },
     ]
   },
   {
     id: '2',
     year: '2022-23',
     members: [
-      { id: 'p4', name: 'Karthik S', role: 'President', image: 'https://picsum.photos/300/300?random=63' },
-      { id: 'p5', name: 'Pooja R', role: 'Vice President', image: 'https://picsum.photos/300/300?random=64' },
+      { id: 'p4', name: 'Karthik S', role: 'President', tagline: 'Legendary starts.', image: 'https://picsum.photos/300/300?random=63' },
+      { id: 'p5', name: 'Pooja R', role: 'Vice President', tagline: 'Vibes and voices.', image: 'https://picsum.photos/300/300?random=64' },
     ]
   }
 ];

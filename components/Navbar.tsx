@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Home, ShoppingBag } from 'lucide-react';
 // Fix: Systemic type issues with framer-motion in this environment
 import { motion as _motion, AnimatePresence } from 'framer-motion';
 const motion = _motion as any;
@@ -8,13 +8,17 @@ import { cn } from '../lib/utils';
 import { LOGO_IMAGE } from '../lib/initialData';
 import { useAdmin } from '../context/AdminContext';
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  onNavigate: (page: 'home' | 'shop') => void;
+  currentPage: 'home' | 'shop';
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
   const { siteConfig } = useAdmin();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
 
-  // Prefers siteConfig logo from DB, falls back to initialData
   const activeLogo = siteConfig.logo || LOGO_IMAGE;
 
   useEffect(() => {
@@ -23,6 +27,7 @@ const Navbar: React.FC = () => {
     };
 
     const handleSpy = () => {
+        if (currentPage !== 'home') return;
         const sections = ['hero', 'about', 'events', 'podcasts', 'departments', 'team'];
         const current = sections.find(section => {
             const element = document.getElementById(section);
@@ -42,31 +47,34 @@ const Navbar: React.FC = () => {
         window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('scroll', handleSpy);
     };
-  }, []);
+  }, [currentPage]);
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleLinkClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    const element = document.getElementById(id);
-    if (element) {
-        const yOffset = -100; 
-        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        
-        window.scrollTo({ top: y, behavior: 'smooth' });
-        setActiveSection(id);
-        setIsMobileMenuOpen(false);
+    if (currentPage !== 'home') {
+        onNavigate('home');
+        // Wait for page transition then scroll
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+    } else {
+        const element = document.getElementById(id);
+        if (element) {
+            const yOffset = -100; 
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
     }
+    setIsMobileMenuOpen(false);
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
   const navLinks = [
-    { name: 'About', href: '#about', id: 'about' },
-    { name: 'Events', href: '#events', id: 'events' },
-    { name: 'Podcasts', href: '#podcasts', id: 'podcasts' },
-    { name: 'Depts', href: '#departments', id: 'departments' },
-    { name: 'Team', href: '#team', id: 'team' },
+    { name: 'About', id: 'about' },
+    { name: 'Events', id: 'events' },
+    { name: 'Podcasts', id: 'podcasts' },
+    { name: 'Depts', id: 'departments' },
+    { name: 'Team', id: 'team' },
   ];
 
   return (
@@ -77,7 +85,7 @@ const Navbar: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="fixed top-6 left-8 z-50 hidden md:block"
     >
-        <button onClick={scrollToTop} className="block group">
+        <button onClick={() => onNavigate('home')} className="block group">
             <div className="w-12 h-12 rounded-full border border-slate-700 bg-black/50 backdrop-blur-md overflow-hidden shadow-[0_0_15px_rgba(255,87,34,0.1)] group-hover:shadow-[0_0_25px_rgba(255,87,34,0.4)] transition-all duration-300 flex items-center justify-center">
                 {activeLogo ? (
                     <img src={activeLogo} alt="VoiceIt Logo" className="w-full h-full object-cover" />
@@ -102,13 +110,32 @@ const Navbar: React.FC = () => {
       )}
     >
         <ul className="flex items-center gap-1">
-            {navLinks.map((link) => {
-                const isActive = activeSection === link.id;
+            <li className="relative">
+                <button 
+                    onClick={() => onNavigate('home')}
+                    className={cn(
+                        "relative z-10 block px-5 py-2 text-sm font-bold transition-colors duration-300",
+                        currentPage === 'home' ? "text-white" : "text-slate-400 hover:text-slate-200"
+                    )}
+                >
+                    Home
+                </button>
+                {currentPage === 'home' && (
+                    <motion.div
+                        layoutId="activePill"
+                        className="absolute inset-0 bg-slate-800/80 rounded-full border border-slate-600"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                )}
+            </li>
+
+            {currentPage === 'home' && navLinks.map((link) => {
+                const isActive = activeSection === link.id && currentPage === 'home';
                 return (
                     <li key={link.name} className="relative">
                         <a 
-                            href={link.href}
-                            onClick={(e) => scrollToSection(e, link.id)}
+                            href={`#${link.id}`}
+                            onClick={(e) => handleLinkClick(e, link.id)}
                             className={cn(
                                 "relative z-10 block px-5 py-2 text-sm font-bold transition-colors duration-300",
                                 isActive ? "text-white" : "text-slate-400 hover:text-slate-200"
@@ -116,23 +143,35 @@ const Navbar: React.FC = () => {
                         >
                             {link.name}
                         </a>
-                        {isActive && (
-                            <motion.div
-                                layoutId="activePill"
-                                className="absolute inset-0 bg-slate-800/80 rounded-full border border-slate-600"
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            />
-                        )}
                     </li>
                 );
             })}
+
+            <li className="relative">
+                <button 
+                    onClick={() => onNavigate('shop')}
+                    className={cn(
+                        "relative z-10 block px-5 py-2 text-sm font-bold transition-colors duration-300 flex items-center gap-2",
+                        currentPage === 'shop' ? "text-white" : "text-slate-400 hover:text-slate-200"
+                    )}
+                >
+                    Shop <ShoppingBag size={14} />
+                </button>
+                {currentPage === 'shop' && (
+                    <motion.div
+                        layoutId="activePill"
+                        className="absolute inset-0 bg-slate-800/80 rounded-full border border-slate-600"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                )}
+            </li>
         </ul>
 
         <div className="w-px h-6 bg-slate-700 mx-2"></div>
 
         <a 
             href="#join"
-            onClick={(e) => scrollToSection(e, 'join')}
+            onClick={(e) => handleLinkClick(e, 'join')}
             className="group relative flex items-center gap-2 px-5 py-2.5 bg-white rounded-full text-black font-bold text-sm overflow-hidden hover:bg-neon-orange transition-colors duration-300"
         >
             <span className="relative z-10">Join</span>
@@ -142,16 +181,18 @@ const Navbar: React.FC = () => {
 
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center bg-black/90 backdrop-blur-lg border-b border-slate-800">
         <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-slate-700 bg-slate-900">
-                 {activeLogo ? (
-                    <img src={activeLogo} alt="Logo" className="w-full h-full object-cover" />
-                 ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-neon-orange to-red-600 flex items-center justify-center">
-                        <span className="font-bold text-white text-xs">V</span>
-                    </div>
-                 )}
-            </div>
-            <span className="font-display font-bold text-white">VOICEIT</span>
+            <button onClick={() => onNavigate('home')} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-slate-700 bg-slate-900">
+                     {activeLogo ? (
+                        <img src={activeLogo} alt="Logo" className="w-full h-full object-cover" />
+                     ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-neon-orange to-red-600 flex items-center justify-center">
+                            <span className="font-bold text-white text-xs">V</span>
+                        </div>
+                     )}
+                </div>
+                <span className="font-display font-bold text-white">VOICEIT</span>
+            </button>
         </div>
         <button 
             onClick={() => setIsMobileMenuOpen(true)}
@@ -176,18 +217,29 @@ const Navbar: React.FC = () => {
                     <X size={32} />
                 </button>
 
-                <div className="flex flex-col gap-8 text-center">
-                    {navLinks.map((link, index) => (
+                <div className="flex flex-col gap-6 text-center">
+                    <button 
+                        onClick={() => { onNavigate('home'); setIsMobileMenuOpen(false); }}
+                        className={cn("text-4xl font-display font-black tracking-tight", currentPage === 'home' ? "text-neon-orange" : "text-white")}
+                    >
+                        Home
+                    </button>
+                    <button 
+                        onClick={() => { onNavigate('shop'); setIsMobileMenuOpen(false); }}
+                        className={cn("text-4xl font-display font-black tracking-tight", currentPage === 'shop' ? "text-neon-orange" : "text-white")}
+                    >
+                        Shop
+                    </button>
+                    {currentPage === 'home' && navLinks.map((link, index) => (
                         <motion.a 
                             key={link.name} 
-                            href={link.href}
+                            href={`#${link.id}`}
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.1 * index }}
-                            onClick={(e) => scrollToSection(e, link.id)}
+                            onClick={(e) => handleLinkClick(e, link.id)}
                             className={cn(
-                                "text-4xl font-display font-black tracking-tight hover:text-neon-orange transition-colors",
-                                activeSection === link.id ? "text-neon-orange" : "text-white"
+                                "text-2xl font-display font-bold tracking-tight text-slate-400 hover:text-white"
                             )}
                         >
                             {link.name}
@@ -199,7 +251,7 @@ const Navbar: React.FC = () => {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        onClick={(e) => scrollToSection(e, 'join')}
+                        onClick={(e) => handleLinkClick(e, 'join')}
                         className="mt-8 px-8 py-3 bg-neon-orange text-black font-bold text-xl rounded-full"
                     >
                         Join The Club

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData, SiteConfig, Memory } from '../types';
-import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout, initialSiteConfig, initialMemories } from '../lib/initialData';
+import { HeroData, Department, EventItem, BoardMember, Lead, Podcast, PastTenure, PastLeadTenure, Testimonial, RecruitmentData, SocialLinks, AboutData, SiteConfig, Memory, MerchItem } from '../types';
+import { initialHero, initialDepartments, initialEvents, initialBoard, initialLeads, initialPodcasts, initialPastTenures, initialPastLeadTenures, initialTestimonials, initialRecruitment, initialSocialLinks, initialAbout, initialSiteConfig, initialMemories, initialMerch } from '../lib/initialData';
 import { auth, db } from '../lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, addDoc, getDocs, query, limit } from 'firebase/firestore';
@@ -21,6 +21,7 @@ interface AdminContextType {
   boardMembers: BoardMember[];
   leads: Lead[];
   podcasts: Podcast[];
+  merch: MerchItem[];
   pastTenures: PastTenure[];
   pastLeadTenures: PastLeadTenure[];
   testimonials: Testimonial[];
@@ -49,6 +50,9 @@ interface AdminContextType {
   addPodcast: (podcast: Omit<Podcast, 'id'>) => Promise<void>;
   updatePodcast: (id: string, data: Partial<Podcast>) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
+  addMerch: (item: Omit<MerchItem, 'id'>) => Promise<void>;
+  updateMerch: (id: string, data: Partial<MerchItem>) => Promise<void>;
+  deleteMerch: (id: string) => Promise<void>;
   archiveBoard: (year: string) => Promise<void>;
   deletePastTenure: (id: string) => Promise<void>;
   archiveLeads: (year: string) => Promise<void>;
@@ -88,6 +92,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>(initialBoard);
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [podcasts, setPodcasts] = useState<Podcast[]>(initialPodcasts);
+  const [merch, setMerch] = useState<MerchItem[]>(initialMerch);
   const [pastTenures, setPastTenures] = useState<PastTenure[]>(initialPastTenures);
   const [pastLeadTenures, setPastLeadTenures] = useState<PastLeadTenure[]>(initialPastLeadTenures);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
@@ -102,13 +107,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (isSingletonDoc) {
                 const s = await getDocs(query(collection(db, 'content'), limit(100))); 
                 if (!s.docs.find(d => d.id === name)) {
-                    console.log(`[Firestore] Creating missing document: content/${name}`);
                     await setDoc(doc(db, 'content', name), sanitize(data));
                 }
             } else {
                 const snap = await getDocs(query(collection(db, name), limit(1)));
                 if (snap.empty) {
-                    console.log(`[Firestore] Initializing missing collection: ${name}`);
                     for (const item of (data as any[])) {
                         const { id, ...clean } = item;
                         if (id) await setDoc(doc(db, name, id), sanitize(clean));
@@ -121,7 +124,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
-    console.log("[Firestore] Starting Database Sync...");
     await seedCollection('hero', initialHero, true);
     await seedCollection('about', initialAbout, true);
     await seedCollection('recruitment', initialRecruitment, true);
@@ -132,21 +134,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await seedCollection('boardMembers', initialBoard);
     await seedCollection('leads', initialLeads);
     await seedCollection('podcasts', initialPodcasts);
+    await seedCollection('merch', initialMerch);
     await seedCollection('testimonials', initialTestimonials);
     await seedCollection('memories', initialMemories);
     await seedCollection('pastTenures', initialPastTenures);
     await seedCollection('pastLeadTenures', initialPastLeadTenures);
-    console.log("[Firestore] Sync complete.");
   }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser ? { uid: currentUser.uid, email: currentUser.email } : null);
       setLoading(false);
-      // Automatically attempt sync if user is logged in
-      if (currentUser) {
-          syncDatabase();
-      }
+      if (currentUser) syncDatabase();
     });
     return () => unsubscribe();
   }, [syncDatabase]);
@@ -164,31 +163,34 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         onSnapshot(doc(db, 'content', 'config'), s => s.exists() && setSiteConfig(s.data() as SiteConfig), logError('config')),
         
         onSnapshot(collection(db, 'departments'), s => {
-            if (!s.empty) setDepartments(s.docs.map(d => ({...d.data(), id: d.id} as Department)));
+            setDepartments(s.docs.map(d => ({...d.data(), id: d.id} as Department)));
         }, logError('departments')),
         onSnapshot(collection(db, 'events'), s => {
-            if (!s.empty) setEvents(s.docs.map(d => ({...d.data(), id: d.id} as EventItem)));
+            setEvents(s.docs.map(d => ({...d.data(), id: d.id} as EventItem)));
         }, logError('events')),
         onSnapshot(collection(db, 'boardMembers'), s => {
-            if (!s.empty) setBoardMembers(s.docs.map(d => ({...d.data(), id: d.id} as BoardMember)));
+            setBoardMembers(s.docs.map(d => ({...d.data(), id: d.id} as BoardMember)));
         }, logError('boardMembers')),
         onSnapshot(collection(db, 'leads'), s => { 
-            if (!s.empty) setLeads(s.docs.map(d => ({...d.data(), id: d.id} as Lead)));
+            setLeads(s.docs.map(d => ({...d.data(), id: d.id} as Lead)));
         }, logError('leads')),
         onSnapshot(collection(db, 'podcasts'), s => {
-            if (!s.empty) setPodcasts(s.docs.map(d => ({...d.data(), id: d.id} as Podcast)));
+            setPodcasts(s.docs.map(d => ({...d.data(), id: d.id} as Podcast)));
         }, logError('podcasts')),
+        onSnapshot(collection(db, 'merch'), s => {
+            setMerch(s.docs.map(d => ({...d.data(), id: d.id} as MerchItem)));
+        }, logError('merch')),
         onSnapshot(collection(db, 'pastTenures'), s => {
-            if (!s.empty) setPastTenures(s.docs.map(d => ({...d.data(), id: d.id} as PastTenure)));
+            setPastTenures(s.docs.map(d => ({...d.data(), id: d.id} as PastTenure)));
         }, logError('pastTenures')),
         onSnapshot(collection(db, 'pastLeadTenures'), s => {
-            if (!s.empty) setPastLeadTenures(s.docs.map(d => ({...d.data(), id: d.id} as PastLeadTenure)));
+            setPastLeadTenures(s.docs.map(d => ({...d.data(), id: d.id} as PastLeadTenure)));
         }, logError('pastLeadTenures')),
         onSnapshot(collection(db, 'testimonials'), s => {
-            if (!s.empty) setTestimonials(s.docs.map(d => ({...d.data(), id: d.id} as Testimonial)));
+            setTestimonials(s.docs.map(d => ({...d.data(), id: d.id} as Testimonial)));
         }, logError('testimonials')),
         onSnapshot(collection(db, 'memories'), s => {
-          if (!s.empty) setMemories(s.docs.map(d => ({...d.data(), id: d.id} as Memory)));
+            setMemories(s.docs.map(d => ({...d.data(), id: d.id} as Memory)));
         }, logError('memories'))
     ];
     return () => unsubs.forEach(u => u());
@@ -260,6 +262,25 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deletePodcast = (id: string) => deleteDoc(doc(db, 'podcasts', id));
 
+  const addMerch = async (item: Omit<MerchItem, 'id'>) => {
+    await addDoc(collection(db, 'merch'), sanitize(item));
+  };
+
+  const updateMerch = async (id: string, data: Partial<MerchItem>) => {
+    const { id: _, ...payload } = data;
+    await updateDoc(doc(db, 'merch', id), sanitize(payload));
+  };
+
+  const deleteMerch = async (id: string) => {
+    try {
+        const docRef = doc(db, 'merch', id);
+        await deleteDoc(docRef);
+    } catch (error) {
+        console.error("Firestore: Error deleting merch item:", error);
+        throw error;
+    }
+  };
+
   const archiveBoard = async (year: string) => {
     await addDoc(collection(db, 'pastTenures'), { year, members: sanitize(boardMembers) });
   };
@@ -308,7 +329,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <AdminContext.Provider value={{
-      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, pastTenures, pastLeadTenures, testimonials, memories, recruitment, socialLinks, siteConfig,
+      user, loading, heroData, aboutData, departments, events, boardMembers, leads, podcasts, merch, pastTenures, pastLeadTenures, testimonials, memories, recruitment, socialLinks, siteConfig,
       isLoginOpen, openLoginModal: () => setIsLoginOpen(true), closeLoginModal: () => setIsLoginOpen(false),
       login, logout, syncDatabase,
       updateHero, updateAbout, updateDepartment,
@@ -316,6 +337,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addBoardMember, updateBoardMember, deleteBoardMember,
       addLead, updateLead, deleteLead,
       addPodcast, updatePodcast, deletePodcast,
+      addMerch, updateMerch, deleteMerch,
       archiveBoard, deletePastTenure,
       archiveLeads, deletePastLeadTenure,
       addTestimonial, updateTestimonial, deleteTestimonial,

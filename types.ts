@@ -25,6 +25,7 @@ export interface BoardMember {
   id: string;
   name: string;
   role: string;
+  tagline?: string;
   image: string;
 }
 
@@ -34,7 +35,7 @@ export interface Lead {
   designation: string; 
   department: string;
   image: string;
-  quote?: string; // Added for the new Slider design
+  quote?: string;
 }
 
 export interface Podcast {
@@ -43,6 +44,17 @@ export interface Podcast {
   host: string;
   duration: string;
   image: string;
+  link?: string;
+}
+
+export interface MerchItem {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  description: string;
+  category: string;
+  isAvailable: boolean;
   link?: string;
 }
 
@@ -102,7 +114,7 @@ export interface SocialLinks {
 export interface SiteConfig {
   showMarquee: boolean;
   marqueeText?: string;
-  logo?: string; // Persistent logo storage (Base64 or URL)
+  logo?: string;
 }
 
 export interface Memory {
